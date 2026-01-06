@@ -1,0 +1,6 @@
+Greetings Universe!
+This is the original content of the file.
+It contains multiple lines.
+We will modify this file next.
+This line has been added during modification.
+The file now contains additional content!

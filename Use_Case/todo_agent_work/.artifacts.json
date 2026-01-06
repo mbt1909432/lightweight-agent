@@ -1,0 +1,20 @@
+[
+  {
+    "id": "3d3be89a-65c8-4908-9cdd-d0da8ac334fa",
+    "file": "E:\\pycharm_project\\lightweight-agent\\Use_Case\\todo_agent_work\\frame_count_ablation.png",
+    "original_path": "E:/pycharm_project/lightweight-agent/Use_Case/todo_agent_work/frame_count_ablation.png",
+    "title": "Frame Count Ablation Visualization",
+    "important_score": 10,
+    "description": "顶会风格的实验对比图，展示Qwen2.5-VL-7B在PEV数据集上Baseline与+ST-GRPO在不同帧数(16/32/48/64)和不同条件(Original/Weather/Occlusion/Shake/Lighting/Average)下的性能对比，包含改进百分比标注",
+    "saved_at": "2026-01-04 21:01:45"
+  },
+  {
+    "id": "6a5e0b96-fc37-46bf-99eb-570644453347",
+    "file": "E:\\pycharm_project\\lightweight-agent\\Use_Case\\todo_agent_work\\frame_count_ablation_plot.py",
+    "original_path": "E:/pycharm_project/lightweight-agent/Use_Case/todo_agent_work/frame_count_ablation_plot.py",
+    "title": "Visualization Python Script",
+    "important_score": 8,
+    "description": "用于生成顶会实验图的Python脚本，使用matplotlib绑制分组柱状图，包含专业的样式设置、颜色配置、图例和改进标注等",
+    "saved_at": "2026-01-04 21:01:45"
+  }
+]
