@@ -272,6 +272,122 @@ artifacts = agent.get_artifacts()
 delivery_summary = agent.get_delivery_summary()
 ```
 
+### 3. CitationAgent（引用代理）
+
+`CitationAgent` 继承自 `TodoBasedAgent`，专门用于将 BibTeX 引用插入到 LaTeX 文档中。它自动提取 BibTeX 条目并在语义合适的位置插入引用。
+
+#### 基本使用
+
+```python
+import asyncio
+import os
+from pathlib import Path
+from lightweight_agent import OpenAIClient
+from lightweight_agent.agent.extension.citation_agent import CitationAgent
+from lightweight_agent.agent.react_agent import AgentMessageType
+from lightweight_agent.agent.pretty_print import (
+    print_system_prompt,
+    print_user_message,
+    print_assistant_message,
+    print_tool_result,
+    print_token_usage
+)
+import dotenv
+
+dotenv.load_dotenv()
+
+async def main():
+    # 初始化客户端
+    api_key = os.getenv("LLM_API_KEY")
+    base_url = os.getenv("LLM_API_BASE")
+    model = os.getenv("MODEL")
+    
+    client = OpenAIClient(api_key=api_key, base_url=base_url, model=model)
+    
+    # 创建工作目录
+    work_dir = Path(__file__).parent / "citation_agent_work"
+    work_dir.mkdir(exist_ok=True)
+    
+    # 创建 CitationAgent
+    agent = CitationAgent(
+        client=client,
+        working_dir=str(work_dir)
+    )
+    
+    # 运行任务
+    # 工作目录应包含：
+    # - paper.tex (LaTeX 文档)
+    # - references.txt 或 references.bib (BibTeX 条目源文件)
+    async for message in agent.run("从 references.txt 提取所有 BibTeX 条目并插入到 paper.tex"):
+        message_type, *content = message
+        
+        if message_type == AgentMessageType.SYSTEM:
+            print_system_prompt(content[0])
+        elif message_type == AgentMessageType.USER:
+            print_user_message(content[0])
+        elif message_type == AgentMessageType.ASSISTANT_WITH_TOOL_CALL:
+            print_assistant_message(content[0], content[1], content[2])
+        elif message_type == AgentMessageType.ASSISTANT:
+            print_assistant_message(content=content[0], token_usage=content[1])
+            print_token_usage(content[2])
+        elif message_type == AgentMessageType.TOOL_RESPONSE:
+            print_tool_result(content[0], content[1])
+        elif message_type == AgentMessageType.ERROR_TOOL_RESPONSE:
+            print_tool_result(content[0], content[1])
+        elif message_type == AgentMessageType.MAXIMUM:
+            print_token_usage(content[1])
+            print(content[0])
+    
+    # 查看 TODO 列表摘要
+    print("\n=== TODO 列表摘要 ===")
+    summary = agent.get_todo_summary()
+    print(f"总计: {summary['total']}, "
+          f"待处理: {summary['pending']}, "
+          f"进行中: {summary['in_progress']}, "
+          f"已完成: {summary['completed']}, "
+          f"失败: {summary['failed']}")
+    
+    # 查看保存的产物
+    print("\n=== 保存的产物 ===")
+    artifacts = agent.get_artifacts()
+    if artifacts:
+        for artifact in artifacts:
+            print(f"- {artifact.get('name', 'Unknown')}: {artifact.get('description', '')}")
+    else:
+        print("没有保存的产物")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+#### 引用工具
+
+`CitationAgent` 额外包含以下工具：
+
+- **bibtex_extract**: 从文本文件中提取 BibTeX 条目
+- **bibtex_insert**: 将 BibTeX 条目插入到 LaTeX 文档的合适位置
+- **bibtex_save**: 保存提取的 BibTeX 条目到文件
+
+#### 工作流程
+
+CitationAgent 会自动执行以下步骤：
+
+1. **创建 TODO 列表**：规划任务步骤
+2. **探索目录**：使用 `list_directory` 查看工作目录
+3. **读取文件**：读取所有相关文件（.tex, .bib, .txt）
+4. **提取 BibTeX 条目**：使用 `bibtex_extract` 从源文件提取引用
+5. **插入引用**：
+   - 手动阶段：使用 `edit_file` 在合适位置插入引用
+   - 自动阶段：使用 `bibtex_insert` 自动分发和格式化引用
+6. **保存产物**：保存修改后的 LaTeX 文件
+
+#### 特性
+
+- **自动 TODO 管理**：基于 TODO 列表的系统化工作流程
+- **两阶段引用插入**：手动定位 + 自动分发
+- **文件命名保护**：保存时保留原始文件名
+- **完整 BibTeX 处理**：提取并插入所有 BibTeX 条目
+
 ## 消息类型
 
 Agent 的 `run()` 方法返回一个异步生成器，产生不同类型的消息：
@@ -321,10 +437,11 @@ agent = ReActAgent(client=client, working_dir=str(work_dir))
 
 ## 完整示例
 
-本目录包含两个完整示例：
+本目录包含三个完整示例：
 
 1. **base_agent_example.py**: ReAct Agent 基础使用示例
 2. **todo_agent_example.py**: TodoBasedAgent 使用示例
+3. **citation_agent_example.py**: CitationAgent 使用示例
 
 运行示例：
 
@@ -334,6 +451,9 @@ python base_agent_example.py
 
 # 运行 TodoBasedAgent 示例
 python todo_agent_example.py
+
+# 运行 CitationAgent 示例
+python citation_agent_example.py
 ```
 
 ## 注意事项

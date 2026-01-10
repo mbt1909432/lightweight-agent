@@ -7,7 +7,9 @@ A lightweight LLM agent framework supporting async OpenAI and Anthropic APIs wit
 - ✅ Async OpenAI and Anthropic API support
 - ✅ Streaming and non-streaming responses
 - ✅ Built-in ReAct Agent and TODO-based Agent
-- ✅ Rich built-in tools (file operations, Python execution, etc.)
+- ✅ Specialized Agent Extensions (Citation Agent, Figure Agent)
+- ✅ Rich built-in tools (file operations, Python execution, batch editing, etc.)
+- ✅ Citation tools for BibTeX processing
 - ✅ Environment variable configuration support
 - ✅ Unified interface design
 - ✅ Comprehensive error handling
@@ -294,7 +296,69 @@ async def main():
 asyncio.run(main())
 ```
 
-For more Agent usage examples, see [`src/Use_Case/README.md`](src/Use_Case/README.md).
+### Citation Agent
+
+Citation Agent is specialized for inserting BibTeX citations into LaTeX documents. It automatically extracts BibTeX entries from source files and inserts them at semantically appropriate locations.
+
+```python
+import asyncio
+from lightweight_agent import CitationAgent, OpenAIClient
+import os
+
+async def main():
+    client = OpenAIClient(
+        api_key=os.getenv("LLM_API_KEY"),
+        base_url=os.getenv("LLM_API_BASE"),
+        model=os.getenv("MODEL")
+    )
+    
+    agent = CitationAgent(
+        client=client,
+        working_dir="./citation_work"
+    )
+    
+    async for message in agent.run("Extract BibTeX entries from references.txt and insert them into paper.tex"):
+        print(message)
+    
+    # View TODO summary
+    summary = agent.get_todo_summary()
+    print(f"Completed: {summary['completed']}/{summary['total']}")
+
+asyncio.run(main())
+```
+
+### Figure Agent
+
+Figure Agent is specialized for inserting figures into LaTeX documents. It scans figure directories and automatically inserts figures at semantically appropriate locations.
+
+```python
+import asyncio
+from lightweight_agent import FigureAgent, OpenAIClient
+import os
+
+async def main():
+    client = OpenAIClient(
+        api_key=os.getenv("LLM_API_KEY"),
+        base_url=os.getenv("LLM_API_BASE"),
+        model=os.getenv("MODEL")
+    )
+    
+    agent = FigureAgent(
+        client=client,
+        working_dir="./figure_work"
+    )
+    
+    async for message in agent.run("Insert all figures from the figure directory into paper.tex"):
+        print(message)
+    
+    # View TODO summary
+    summary = agent.get_todo_summary()
+    print(f"Completed: {summary['completed']}/{summary['total']}")
+
+asyncio.run(main())
+```
+
+For more Agent usage examples, see [`Use_Case/README.md`](Use_Case/README.md).
 
 ## Example Code
 
@@ -305,9 +369,13 @@ For more example code, see:
   - `examples/openai_non_streaming.py` - OpenAI non-streaming response example
   - `examples/anthropic_streaming.py` - Anthropic streaming response example
   - `examples/anthropic_non_streaming.py` - Anthropic non-streaming response example
-- `src/Use_Case/` directory - Agent usage examples
-  - `src/Use_Case/base_agent_example.py` - ReAct Agent example
-  - `src/Use_Case/todo_agent_example.py` - TODO-based Agent example
+  - `examples/citation_agent/` - Citation Agent usage example
+    - `examples/citation_agent/example.py` - Citation Agent example
+    - `examples/citation_agent/README.md` - Citation Agent documentation
+- `Use_Case/` directory - Agent usage examples
+  - `Use_Case/base_agent_example.py` - ReAct Agent example
+  - `Use_Case/todo_agent_example.py` - TODO-based Agent example
+  - `Use_Case/citation_agent_example.py` - Citation Agent example
 
 ## Development
 
@@ -347,6 +415,14 @@ Issues and Pull Requests are welcome!
 - Environment variable configuration support
 - Built-in ReAct Agent and TODO-based Agent
 - Rich built-in tool support
+
+### 0.2.0 (2025-01-10)
+
+- Added Citation Agent extension for BibTeX citation insertion
+- Added Figure Agent extension for LaTeX figure insertion
+- Added BatchEditTool for efficient batch file editing
+- Added Citation tools (bibtex_extract, bibtex_insert, bibtex_save)
+- Enhanced TODO-based Agent with specialized workflows
 
 ## Version Updates
 
