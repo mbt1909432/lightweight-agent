@@ -111,14 +111,14 @@ class ReActAgent:
     async def run(
         self,
         prompt: str,
-        max_iterations=20,
+        max_iterations=60,
         stream: bool = False
     ):
         """
         Execute ReAct loop, automatically iterating until no tool calls
         
         :param prompt: User prompt
-        :param max_iterations: Maximum number of iterations (default: 20)
+        :param max_iterations: Maximum number of iterations (default: 60)
         :param stream: Whether to stream output (not supported yet, interface reserved)
         :return: Agent's final response (automatically exits when no tool calls)
         

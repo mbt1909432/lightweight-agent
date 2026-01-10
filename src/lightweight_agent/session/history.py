@@ -17,8 +17,25 @@ class Message:
         """Convert to dictionary format (for API calls)"""
         result = {
             "role": self.role,
-            "content": self.content,
         }
+        # Handle content field:
+        # - system and user messages must have content (even if empty)
+        # - assistant messages with tool_calls can omit content if empty (for API compatibility)
+        # - tool messages must have content
+        # - assistant messages without tool_calls must have content
+        if self.role in ("system", "user"):
+            # system and user messages always include content
+            result["content"] = self.content if self.content else ""
+        elif self.role == "assistant":
+            # assistant messages: include content only if non-empty or no tool_calls
+            if self.content or not self.tool_calls:
+                result["content"] = self.content if self.content else ""
+            # If assistant has tool_calls and empty content, omit content field entirely
+            # This avoids API validation errors (e.g., AWS Bedrock)
+        elif self.role == "tool":
+            # tool messages must have content
+            result["content"] = self.content if self.content else ""
+        
         if self.tool_calls:
             result["tool_calls"] = self.tool_calls
         if self.tool_call_id:

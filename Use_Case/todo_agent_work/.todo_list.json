@@ -1,32 +1,55 @@
 {
   "items": [
     {
-      "id": "3a8b0125-299a-4495-a16c-7e25cb877c3f",
-      "description": "分析LaTeX表格数据，提取Baseline和+ST-GRPO在不同帧数(16, 32, 48, 64)和不同条件(Original, Weather, Occlusion, Shake, Lighting, Average)下的性能数据",
+      "id": "13917a4e-467b-4667-96e2-15d01fda2d73",
+      "description": "Create a line plot visualization showing performance trends across frame counts for each condition",
       "required_tools": [
-        "Read"
-      ],
-      "success_criteria": "完整理解数据结构和数值",
-      "status": "completed"
-    },
-    {
-      "id": "d9135d24-3395-4ab4-8652-8db587be9234",
-      "description": "创建Python可视化脚本，绘制顶会风格的实验图，展示Baseline vs ST-GRPO在不同帧数下的性能对比",
-      "required_tools": [
-        "Write"
-      ],
-      "success_criteria": "创建专业的可视化脚本，包含分组柱状图或折线图",
-      "status": "completed"
-    },
-    {
-      "id": "26e906c8-377c-41cf-995e-1114b935e887",
-      "description": "运行Python脚本生成PNG图像",
-      "required_tools": [
+        "Write",
         "run_python_file"
       ],
-      "success_criteria": "成功生成高质量的PNG图像文件",
+      "success_criteria": "Generate line_plot_comparison.py and corresponding PNG file showing trends across frame counts",
       "status": "completed"
+    },
+    {
+      "id": "fd32cff2-1ad0-4136-a4c4-cbd4ef9433e4",
+      "description": "Create a heatmap visualization showing the improvement ratios (ST-GRPO vs Baseline) across conditions and frame counts",
+      "required_tools": [
+        "Write",
+        "run_python_file"
+      ],
+      "success_criteria": "Generate heatmap_improvement.py and corresponding PNG file showing improvement patterns",
+      "status": "completed"
+    },
+    {
+      "id": "0e8cdce0-4273-4dc4-8ca7-0f237cf65610",
+      "description": "Create a violin plot or box plot style visualization comparing baseline vs ST-GRPO distributions across all conditions",
+      "required_tools": [
+        "Write",
+        "run_python_file"
+      ],
+      "success_criteria": "Generate distribution_comparison.py and corresponding PNG file showing performance distributions",
+      "status": "completed"
+    },
+    {
+      "id": "82664aaa-2494-49e6-963c-4a5aced5b611",
+      "description": "Create a radar chart visualization showing performance across different conditions for selected frame counts",
+      "required_tools": [
+        "Write",
+        "run_python_file"
+      ],
+      "success_criteria": "Generate radar_chart_performance.py and corresponding PNG file showing multi-dimensional comparison",
+      "status": "in_progress"
+    },
+    {
+      "id": "2c6f9b68-0c7c-43c9-8f08-e8684264af27",
+      "description": "Create a stacked bar chart showing absolute improvements by frame count and condition",
+      "required_tools": [
+        "Write",
+        "run_python_file"
+      ],
+      "success_criteria": "Generate stacked_improvement_chart.py and corresponding PNG file showing improvement magnitudes",
+      "status": "pending"
     }
   ],
-  "created_at": "2026-01-04 21:00:07"
+  "created_at": "2026-01-07 19:43:41"
 }

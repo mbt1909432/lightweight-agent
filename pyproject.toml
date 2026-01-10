@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lightweight-agent"
-version = "0.1.0"
+version = "0.1.1"
 description = "A lightweight LLM agent framework supporting async OpenAI and Anthropic APIs with ReAct agents, TODO-based agents, and built-in tools"
 readme = "README.md"
 requires-python = ">=3.8"

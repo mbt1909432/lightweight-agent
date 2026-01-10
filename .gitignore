@@ -136,3 +136,4 @@ dmypy.json
 .env.*.local
 examples/
 
+test_function/

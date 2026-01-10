@@ -1,0 +1,141 @@
+% 经典书籍（Book）
+@book{knuth1998art,
+  title={The Art of Computer Programming, Vol. 3: Sorting and Searching},
+  author={Knuth, Donald E.},
+  edition={2nd},
+  year={1998},
+  publisher={Addison-Wesley},
+  address={Reading, MA}
+}
+
+@book{bentley2000programming,
+  title={Programming Pearls},
+  author={Bentley, Jon L.},
+  edition={2nd},
+  year={2000},
+  publisher={Addison-Wesley},
+  address={Boston, MA}
+}
+
+@book{clrs2009introduction,
+  title={Introduction to Algorithms},
+  author={Cormen, Thomas H. and Leiserson, Charles E. and Rivest, Ronald L. and Stein, Clifford},
+  edition={3rd},
+  year={2009},
+  publisher={MIT Press},
+  address={Cambridge, MA}
+}
+
+% 期刊论文（Journal Article）
+@article{narayanan2015efficient,
+  title={Efficient binary search for rotated sorted arrays},
+  author={Narayanan, S. and Sharma, A.},
+  journal={International Journal of Computer Science and Engineering},
+  volume={11},
+  number={3},
+  pages={289--296},
+  year={2015},
+  publisher={Springer}
+}
+
+@article{li2018distributed,
+  title={Distributed binary search for large-scale ordered data in cloud storage},
+  author={Li, H. and Wang, Y. and Zhang, L. and Chen, M.},
+  journal={IEEE Transactions on Cloud Computing},
+  volume={6},
+  number={4},
+  pages={1123--1135},
+  year={2018},
+  publisher={IEEE}
+}
+
+@article{zhang2020high,
+  title={HD-BST: High-dimensional binary search tree for fast nearest neighbor search},
+  author={Zhang, Y. and Liu, X. and Zhao, J.},
+  journal={Pattern Recognition},
+  volume={107},
+  pages={107568},
+  year={2020},
+  publisher={Elsevier}
+}
+
+@article{wang2021hardware,
+  title={Hardware-accelerated binary search for real-time embedded systems},
+  author={Wang, L. and Li, Q. and Huang, Z.},
+  journal={IEEE Transactions on Circuits and Systems II: Express Briefs},
+  volume={68},
+  number={7},
+  pages={2345--2349},
+  year={2021},
+  publisher={IEEE}
+}
+
+@article{chen2022dynamic,
+  title={Dynamic binary search for efficient model pruning in neural network inference},
+  author={Chen, M. and Yang, S. and Zhou, H.},
+  journal={Neural Computation},
+  volume={34},
+  number={5},
+  pages={1189--1210},
+  year={2022},
+  publisher={MIT Press}
+}
+
+% 会议论文（Conference Paper）
+@inproceedings{sun2019parallel,
+  title={Parallel binary search for multi-core processors},
+  author={Sun, W. and Chen, J. and Li, Y.},
+  booktitle={2019 IEEE International Conference on Parallel and Distributed Systems (ICPADS)},
+  pages={456--463},
+  year={2019},
+  organization={IEEE},
+  address={Tianjin, China}
+}
+
+@inproceedings{guo2020optimized,
+  title={Optimized binary search for flash memory storage systems},
+  author={Guo, F. and Wang, H. and Zhang, X.},
+  booktitle={2020 ACM SIGMOD International Conference on Management of Data},
+  pages={1234--1248},
+  year={2020},
+  organization={ACM},
+  address={Portland, OR, USA}
+}
+
+% 学位论文（Thesis）
+@phdthesis{liu2021improved,
+  title={Improved Binary Search Algorithms for Noisy and Dynamic Data},
+  author={Liu, J.},
+  year={2021},
+  school={Tsinghua University},
+  address={Beijing, China},
+  type={PhD Dissertation}
+}
+
+@mastersthesis{zhang2022practical,
+  title={Practical Binary Search Implementation for Embedded IoT Devices},
+  author={Zhang, M.},
+  year={2022},
+  school={Shanghai Jiao Tong University},
+  address={Shanghai, China},
+  type={Master's Thesis}
+}
+
+% 技术报告（Tech Report）
+@techreport{google2020binary,
+  title={Binary Search Optimization in Google BigQuery},
+  author={Google Research Team},
+  year={2020},
+  institution={Google LLC},
+  number={TR-2020-08},
+  address={Mountain View, CA, USA}
+}
+
+@techreport{alibaba2021distributed,
+  title={Distributed Binary Search for E-Commerce Data Indexing},
+  author={Alibaba Cloud Computing Team},
+  year={2021},
+  institution={Alibaba Group},
+  number={ACC-TR-2021-12},
+  address={Hangzhou, China}
+}
