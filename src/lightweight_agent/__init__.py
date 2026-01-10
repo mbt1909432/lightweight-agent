@@ -15,7 +15,7 @@ from .session.session import Session
 from .tools.registry import ToolRegistry
 from .tools.base import Tool
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __all__ = [
     "OpenAIClient",
     "AnthropicClient",
