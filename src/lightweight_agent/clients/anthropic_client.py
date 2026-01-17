@@ -1,12 +1,13 @@
 """Anthropic Client Implementation"""
 from typing import AsyncIterator, Optional, Union, List, Dict, Any
+from pathlib import Path
 import json
 from anthropic import AsyncAnthropic
 from anthropic._exceptions import APIError as AnthropicAPIError, APIConnectionError
 
 from .base import BaseClient
 from ..exceptions import APIError, NetworkError, ValidationError
-from ..utils import validate_prompt
+from ..utils import validate_prompt, create_anthropic_image_message
 from ..models import GenerateResponse, StreamingResponse, TokenUsage
 
 
@@ -39,6 +40,24 @@ class AnthropicClient(BaseClient):
 
         self.client = AsyncAnthropic(**client_kwargs)
     
+    def add_image_to_messages(
+        self,
+        messages: List[Dict[str, Any]],
+        image_path: Union[str, Path],
+        text: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Add image to messages list for vision API
+        
+        :param messages: Existing message list
+        :param image_path: Path to image file
+        :param text: Optional text prompt to accompany the image
+        :return: Updated messages list with image message
+        """
+        image_message = create_anthropic_image_message(image_path, text)
+        messages.append(image_message)
+        return messages
+    
     async def generate(
         self,
         messages: List[Dict[str, Any]],
@@ -50,7 +69,7 @@ class AnthropicClient(BaseClient):
         """
         Generate response
         
-        :param messages: Message list
+        :param messages: Message list (can include image messages created with add_image_to_messages)
         :param stream: Whether to stream response
         :param system: System prompt
         :param max_tokens: Maximum tokens
@@ -90,7 +109,21 @@ class AnthropicClient(BaseClient):
         except APIConnectionError as e:
             raise NetworkError(f"Network error when calling Anthropic API: {str(e)}") from e
         except AnthropicAPIError as e:
-            raise APIError(f"Anthropic API error: {str(e)}") from e
+            # Extract detailed error information
+            error_details = str(e)
+            if hasattr(e, 'status_code'):
+                error_details += f" (Status: {e.status_code})"
+            if hasattr(e, 'body') and e.body:
+                try:
+                    if isinstance(e.body, dict):
+                        error_details += f" (Body: {json.dumps(e.body, ensure_ascii=False)})"
+                    else:
+                        error_details += f" (Body: {str(e.body)})"
+                except:
+                    pass
+            if hasattr(e, 'message') and e.message:
+                error_details += f" (Message: {e.message})"
+            raise APIError(f"Anthropic API error: {error_details}") from e
         except Exception as e:
             raise APIError(f"Unexpected error: {str(e)}") from e
     

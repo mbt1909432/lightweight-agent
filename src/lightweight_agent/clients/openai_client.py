@@ -1,11 +1,12 @@
 """OpenAI Client Implementation"""
 from typing import AsyncIterator, Optional, Union, List, Dict, Any
+from pathlib import Path
 from openai import AsyncOpenAI
 from openai._exceptions import APIError as OpenAIAPIError, APIConnectionError
 
 from .base import BaseClient
 from ..exceptions import APIError, NetworkError, ValidationError
-from ..utils import validate_prompt
+from ..utils import validate_prompt, create_openai_image_message
 from ..models import GenerateResponse, StreamingResponse, TokenUsage
 
 
@@ -30,6 +31,24 @@ class OpenAIClient(BaseClient):
         self.model = model
         self.client = AsyncOpenAI(api_key=api_key,base_url=base_url,max_retries=4)
     
+    def add_image_to_messages(
+        self,
+        messages: List[Dict[str, Any]],
+        image_path: Union[str, Path],
+        text: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Add image to messages list for vision API
+        
+        :param messages: Existing message list
+        :param image_path: Path to image file
+        :param text: Optional text prompt to accompany the image
+        :return: Updated messages list with image message
+        """
+        image_message = create_openai_image_message(image_path, text)
+        messages.append(image_message)
+        return messages
+    
     async def generate(
         self,
         messages: List[Dict[str, Any]],
@@ -40,7 +59,7 @@ class OpenAIClient(BaseClient):
         """
         Generate response
         
-        :param messages: Message list
+        :param messages: Message list (can include image messages created with add_image_to_messages)
         :param stream: Whether to stream response
         :param temperature: Temperature parameter
         :return: StreamingResponse for streaming, GenerateResponse for non-streaming
