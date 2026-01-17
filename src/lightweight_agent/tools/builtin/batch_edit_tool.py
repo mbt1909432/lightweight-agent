@@ -42,10 +42,6 @@ class BatchEditTool(Tool):
                                 "type": "boolean",
                                 "description": "Replace all occurrences (default False)",
                                 "default": False
-                            },
-                            "id": {
-                                "type": "string",
-                                "description": "Optional identifier for this edit (for tracking in results)"
                             }
                         },
                         "required": ["old_string", "new_string"]
