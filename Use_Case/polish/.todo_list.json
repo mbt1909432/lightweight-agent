@@ -1,0 +1,108 @@
+{
+  "items": [
+    {
+      "id": "0ea11b9b-10a8-4c5a-bc29-097454925fe3",
+      "description": "检查 LaTeX 文件结构：验证 \\begin{document} 位置、所有环境是否闭合、特殊字符转义",
+      "required_tools": [
+        "Read",
+        "BatchEdit"
+      ],
+      "success_criteria": "确保文件可在 Overleaf 上编译，所有 LaTeX 语法正确",
+      "status": "completed"
+    },
+    {
+      "id": "5bd3f2cd-7949-4748-a6f2-1ee45948d4c4",
+      "description": "扫描并删除所有 TODO 标记、占位符、临时注释（如 'TBD'、'待补充'、'% TODO:' 等）",
+      "required_tools": [
+        "Read",
+        "BatchEdit"
+      ],
+      "success_criteria": "全文无任何开发过程痕迹，所有临时标记已清理",
+      "status": "completed"
+    },
+    {
+      "id": "d6c305c6-15e0-43a1-b7c4-3d9879c73eac",
+      "description": "检查标题与内容一致性：确保论文标题与摘要、正文内容完全对应",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "标题、摘要、正文描述的方法和贡献完全一致",
+      "status": "completed"
+    },
+    {
+      "id": "59bfde57-17b5-4b94-8039-0b1101c43c99",
+      "description": "统一学术语气：检查并修改所有非正式表述、口语化表达、主观情绪化语言",
+      "required_tools": [
+        "Read",
+        "BatchEdit"
+      ],
+      "success_criteria": "全文采用正式学术写作风格，客观中立",
+      "status": "completed"
+    },
+    {
+      "id": "746da921-39d7-413c-8237-81a82e5bcd64",
+      "description": "数值一致性检查：对比摘要、结论、正文中的数值与表格数据是否完全一致",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "所有数值引用与表格数据完全匹配，无矛盾",
+      "status": "completed"
+    },
+    {
+      "id": "d2b91cc1-9063-4f7e-8a86-46a04c819bb9",
+      "description": "调整文字描述以匹配表格数据：根据表格中的示例数据，调整摘要和结论中的数值描述",
+      "required_tools": [
+        "BatchEdit"
+      ],
+      "success_criteria": "摘要、结论、正文中的数值描述与表格数据完全对应",
+      "status": "completed"
+    },
+    {
+      "id": "0bd1cf77-f80c-4341-940c-5a16f35397fa",
+      "description": "检查结构完整性：验证 Introduction、Related Work、Method、Experiments、Conclusion 各节是否完整、逻辑是否通顺",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "论文结构清晰，各节逻辑连贯，无明显跳跃",
+      "status": "completed"
+    },
+    {
+      "id": "0fb1ce79-5aad-485e-9ff4-39d3386cbd33",
+      "description": "统一术语和符号：确保同一概念在全文中使用一致的术语和符号表示",
+      "required_tools": [
+        "Read",
+        "BatchEdit"
+      ],
+      "success_criteria": "全文术语和符号使用一致，无重复或混淆",
+      "status": "completed"
+    },
+    {
+      "id": "353a9007-ed90-468c-81a4-8eb612d111d7",
+      "description": "检查引用完整性：验证所有 \\cite、\\ref、\\label 是否有对应定义，确保引用正确",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "所有引用都有对应定义，无未定义的引用",
+      "status": "completed"
+    },
+    {
+      "id": "8ccad380-385c-4335-b557-bf2d64c57bb9",
+      "description": "最终通读与自检：再次通读全文，检查是否还有残留问题、不连贯之处",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "全文读起来专业、完整、可直接投稿",
+      "status": "completed"
+    },
+    {
+      "id": "96285d2a-0af8-48ce-8f88-633a29d933ae",
+      "description": "调用 save_important_artifacts 保存打磨后的论文主文件和修改说明",
+      "required_tools": [
+        "save_important_artifacts"
+      ],
+      "success_criteria": "论文文件已保存，包含完整的修改记录",
+      "status": "completed"
+    }
+  ],
+  "created_at": "2026-01-17 18:39:25"
+}

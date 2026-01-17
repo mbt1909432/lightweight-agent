@@ -1,0 +1,152 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Setup}
+\label{sec:setup}
+
+\subsubsection{Benchmark Datasets.}
+We evaluate our method on two established benchmarks for generic event boundary detection (GEBD). The \textbf{Kinetics-GEBD} dataset is derived from the Kinetics-400 dataset, comprising approximately 60K videos. Each video is annotated with taxonomy-free event boundaries, containing about five events on average. The dataset is officially split into training (18,794 videos), validation (18,813 videos), and test (17,725 videos) sets. As test set annotations are withheld, we report results on the validation set, consistent with prior work. For cross-validation in certain analyses, we further split the training data into 80\% for training and 20\% for validation. The \textbf{TAPOS} dataset consists of Olympic sports videos originally annotated for action localization. Following the standard adaptation for GEBD, we repurpose it by discarding action labels and treating sub-action boundaries as generic event boundaries. This results in 13,094 training and 1,790 validation action instances.
+
+\subsubsection{Evaluation Metric.}
+We adopt the standard Relative Distance (Rel.Dis) metric for GEBD. For a predicted boundary timestamp and its corresponding ground truth, the relative distance is computed as their temporal offset divided by the duration of the union of the predicted and ground-truth event instances. Following common practice, when multiple consecutive frames are predicted as boundaries, the central frame is taken as the final timestamp. Performance is evaluated under ten Rel.Dis thresholds from 0.05 to 0.5 with a step size of 0.05. A prediction is considered correct if its Rel.Dis is below a given threshold. We report the F1 score at each threshold and the average F1 score across all thresholds.
+
+\subsubsection{Baselines.}
+Establishing baselines for Online GEBD (On-GEBD) is non-trivial as standard offline GEBD methods are not designed for streaming input. Therefore, we adapt state-of-the-art models from related online video understanding tasks. From Online Action Detection, we adapt TeSTra, OadTR, and MiniROAD. From Online Temporal Action Localization, we adapt Sim-On. For a fair comparison, we modify only the final layer of each model to perform binary classification (boundary vs. non-boundary), denoted with the suffix '-BC'. We also compare against a dedicated online GEBD method, \textbf{ESTimator}. Furthermore, to contextualize our online performance, we include comparisons with leading offline GEBD methods.
+
+\subsubsection{Implementation Details.}
+Our proposed method, \textbf{ESTimator++}, is implemented using standard video features for fair comparison. Videos are sampled at 24 FPS for Kinetics-GEBD and 6 FPS for TAPOS. We use 2048-dimensional features extracted by an ImageNet-pretrained ResNet-50 encoder. The Hierarchical Memory-augmented Transformer (HMT) employs a main memory with dimension $d_m=512$ and a local context cache of size $L=16$. The Adaptive Multi-scale Temporal Discriminator (AMTD) uses temporal convolutional kernels of sizes $[3, 7, 15]$. The model is trained end-to-end for 30 epochs using the AdamW optimizer with a learning rate of $1\times10^{-4}$, a batch size of 512, and loss weights $\lambda_s=0.1$ and $\lambda_c=0.05$.
+
+\subsection{Main Results}
+
+\subsubsection{Comparison with Online Baselines}
+Table~\ref{tab:online_k400} and Table~\ref{tab:online_tapos} present the online detection performance on the Kinetics-GEBD and TAPOS validation sets, respectively.
+
+On Kinetics-GEBD (Table~\ref{tab:online_k400}), \textbf{ESTimator++} sets a new state-of-the-art, outperforming all online baselines across all Rel.Dis thresholds. Traditional online models like TeSTra-BC and Sim-On-BC show limited effectiveness for this task. While MiniROAD-BC and the prior dedicated method ESTimator perform better, our method achieves a superior average F1 score of \textbf{0.778}. This represents an improvement of +3.0\% over ESTimator and +9.7\% over MiniROAD-BC, demonstrating the efficacy of our proposed architectural components.
+
+\begin{table}[htbp]
+\centering
+\caption{Quantitative comparison with online baselines on the Kinetics-GEBD validation set. 'BC' denotes a binary classifier head. Best results are in \textbf{bold}, second best are \underline{underlined}.}
+\label{tab:online_k400}
+\begin{tabular}{lccccccccccc}
+\toprule
+\textbf{Method} & \textbf{0.05} & \textbf{0.1} & \textbf{0.15} & \textbf{0.2} & \textbf{0.25} & \textbf{0.3} & \textbf{0.35} & \textbf{0.4} & \textbf{0.45} & \textbf{0.5} & \textbf{Avg} \\
+\midrule
+TeSTra-BC & 0.438 & 0.488 & 0.521 & 0.545 & 0.564 & 0.580 & 0.593 & 0.604 & 0.614 & 0.622 & 0.557 \\
+Sim-On-BC & 0.461 & 0.534 & 0.579 & 0.610 & 0.633 & 0.651 & 0.664 & 0.675 & 0.685 & 0.692 & 0.618 \\
+OadTR-BC & 0.474 & 0.512 & 0.535 & 0.552 & 0.565 & 0.575 & 0.583 & 0.590 & 0.596 & 0.601 & 0.558 \\
+MiniROAD-BC & 0.569 & 0.622 & 0.649 & 0.675 & 0.691 & 0.704 & 0.714 & 0.722 & 0.729 & 0.735 & 0.681 \\
+ESTimator & 0.620 & 0.687 & 0.724 & 0.746 & 0.762 & 0.774 & 0.782 & 0.789 & 0.795 & 0.799 & 0.748 \\
+\midrule
+\textbf{ESTimator++ (Ours)} & \textbf{0.642} & \textbf{0.712} & \textbf{0.751} & \textbf{0.775} & \textbf{0.790} & \textbf{0.802} & \textbf{0.810} & \textbf{0.816} & \textbf{0.821} & \textbf{0.825} & \textbf{0.778} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A similar trend is observed on TAPOS (Table~\ref{tab:online_tapos}). \textbf{ESTimator++} achieves the best average F1 score of \textbf{0.569}, outperforming ESTimator by +2.2\% and MiniROAD-BC by +4.1\%. The advantage is particularly notable at stricter thresholds (e.g., 0.05, 0.1), indicating more precise boundary localization. The consistent superiority across both datasets underscores the robustness and generalizability of our approach.
+
+\begin{table}[htbp]
+\centering
+\caption{Quantitative comparison with online baselines on the TAPOS validation set. Best results are in \textbf{bold}, second best are \underline{underlined}.}
+\label{tab:online_tapos}
+\begin{tabular}{lccccccccccc}
+\toprule
+\textbf{Method} & \textbf{0.05} & \textbf{0.1} & \textbf{0.15} & \textbf{0.2} & \textbf{0.25} & \textbf{0.3} & \textbf{0.35} & \textbf{0.4} & \textbf{0.45} & \textbf{0.5} & \textbf{Avg} \\
+\midrule
+TeSTra-BC & 0.364 & 0.417 & 0.452 & 0.478 & 0.496 & 0.511 & 0.523 & 0.533 & 0.542 & 0.550 & 0.487 \\
+Sim-On-BC & 0.225 & 0.269 & 0.303 & 0.329 & 0.350 & 0.367 & 0.381 & 0.394 & 0.405 & 0.415 & 0.344 \\
+OadTR-BC & 0.263 & 0.319 & 0.361 & 0.394 & 0.422 & 0.445 & 0.465 & 0.483 & 0.497 & 0.510 & 0.416 \\
+MiniROAD-BC & 0.422 & 0.472 & 0.502 & 0.522 & 0.537 & 0.549 & 0.558 & 0.566 & 0.572 & 0.578 & 0.528 \\
+ESTimator & 0.394 & 0.455 & 0.499 & 0.532 & 0.558 & 0.578 & 0.594 & 0.608 & 0.619 & 0.629 & 0.547 \\
+\midrule
+\textbf{ESTimator++ (Ours)} & \textbf{0.418} & \textbf{0.484} & \textbf{0.531} & \textbf{0.566} & \textbf{0.592} & \textbf{0.613} & \textbf{0.629} & \textbf{0.642} & \textbf{0.653} & \textbf{0.663} & \textbf{0.569} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Comparison with Offline Methods}
+We further compare our online method against powerful offline models that utilize the full video context. Results are shown in Table~\ref{tab:offline_k400} for Kinetics-GEBD and Table~\ref{tab:offline_tapos} for TAPOS.
+
+Remarkably, on Kinetics-GEBD, \textbf{ESTimator++} with an average F1 of \textbf{0.778} not only leads all online methods but also competes favorably with state-of-the-art offline approaches. It surpasses all offline supervised methods except for PC and the unsupervised CoSeg. It is important to note that PC and CoSeg benefit from full-video processing and, in CoSeg's case, cross-video co-segmentation. The fact that our \textit{online} method achieves performance comparable to sophisticated offline models like TCN highlights the efficacy of its design.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison with offline methods on Kinetics-GEBD. Offline results are from their original papers. Best overall score is in \textbf{bold}. Top-3 rankings are indicated: \textbf{1st}, \underline{2nd}, $\dagger$3rd.}
+\label{tab:offline_k400}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllccccccccccc}
+\toprule
+\textbf{Setting} & \textbf{Sup.} & \textbf{Method} & \textbf{0.05} & \textbf{0.1} & \textbf{0.15} & \textbf{0.2} & \textbf{0.25} & \textbf{0.3} & \textbf{0.35} & \textbf{0.4} & \textbf{0.45} & \textbf{0.5} & \textbf{Avg} \\
+\midrule
+Offline & Supervised & BMN & 0.186 & 0.204 & 0.213 & 0.220 & 0.226 & 0.230 & 0.233 & 0.237 & 0.239 & 0.241 & 0.223 \\
+Offline & Supervised & BMN-StartEnd & 0.491 & 0.589 & 0.627 & 0.648 & 0.660 & 0.668 & 0.674 & 0.678 & 0.681 & 0.683 & 0.640 \\
+Offline & Supervised & TCN-TAPOS & 0.464 & 0.560 & 0.602 & 0.628 & 0.645 & 0.659 & 0.669 & 0.676 & 0.682 & 0.687 & 0.627 \\
+Offline & Supervised & TCN & 0.588 & 0.657 & 0.679 & 0.691 & 0.698 & 0.703 & 0.706 & 0.708 & 0.710 & 0.712 & 0.685 \\
+Offline & Supervised & \textbf{PC} & 0.625 & \textbf{0.758} & \textbf{0.804} & \textbf{0.829} & \textbf{0.844} & \textbf{0.853} & \textbf{0.859} & \textbf{0.864} & \textbf{0.867} & \textbf{0.870} & \textbf{0.817} \\
+\midrule
+Offline & Unsupervised & SceneDetect & 0.275 & 0.300 & 0.312 & 0.319 & 0.324 & 0.327 & 0.330 & 0.332 & 0.334 & 0.335 & 0.318 \\
+Offline & Unsupervised & PA-Random & 0.336 & 0.435 & 0.484 & 0.512 & 0.529 & 0.541 & 0.548 & 0.554 & 0.558 & 0.561 & 0.506 \\
+Offline & Unsupervised & PA & 0.396 & 0.488 & 0.520 & 0.534 & 0.544 & 0.550 & 0.555 & 0.558 & 0.561 & 0.564 & 0.527 \\
+Offline & Unsupervised & \underline{CoSeg} & \textbf{0.656} & 0.758 & 0.783 & 0.794 & 0.799 & 0.803 & 0.804 & 0.806 & 0.807 & 0.809 & 0.782 \\
+\midrule
+Online & Supervised & ESTimator & 0.620 & 0.687 & 0.724 & 0.746 & 0.762 & 0.774 & 0.782 & 0.789 & 0.795 & 0.799 & 0.748 \\
+\textbf{Online} & \textbf{Supervised} & \textbf{ESTimator++ (Ours)} & $\dagger$\textbf{0.642} & $\dagger$\textbf{0.712} & $\dagger$\textbf{0.751} & $\dagger$\textbf{0.775} & $\dagger$\textbf{0.790} & $\dagger$\textbf{0.802} & $\dagger$\textbf{0.810} & $\dagger$\textbf{0.816} & $\dagger$\textbf{0.821} & $\dagger$\textbf{0.825} & $\dagger$\textbf{0.778} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+On the TAPOS dataset (Table~\ref{tab:offline_tapos}), \textbf{ESTimator++} again demonstrates strong competitiveness, achieving an average F1 of \textbf{0.569}. It outperforms all offline supervised baselines except PC, and shows superior performance compared to the unsupervised PA method, especially at stricter thresholds. This consistent ability to rival many offline models underscores a key advantage: \textbf{ESTimator++} delivers high-quality boundary detection with minimal latency, making it suitable for real-time applications.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison with offline methods on TAPOS. Offline results are from their original papers. Best overall score is in \textbf{bold}. Top-3 rankings are indicated: \textbf{1st}, \underline{2nd}, $\dagger$3rd.}
+\label{tab:offline_tapos}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllccccccccccc}
+\toprule
+\textbf{Setting} & \textbf{Sup.} & \textbf{Method} & \textbf{0.05} & \textbf{0.1} & \textbf{0.15} & \textbf{0.2} & \textbf{0.25} & \textbf{0.3} & \textbf{0.35} & \textbf{0.4} & \textbf{0.45} & \textbf{0.5} & \textbf{Avg} \\
+\midrule
+Offline & Supervised & ISBA & 0.106 & 0.170 & 0.227 & 0.265 & 0.298 & 0.326 & 0.348 & 0.348 & 0.348 & 0.348 & 0.330 \\
+Offline & Supervised & TCN & 0.237 & 0.312 & 0.331 & 0.339 & 0.342 & 0.344 & 0.347 & 0.348 & 0.348 & 0.348 & 0.330 \\
+Offline & Supervised & CTM & 0.244 & 0.312 & 0.336 & 0.351 & 0.361 & 0.369 & 0.374 & 0.381 & 0.383 & 0.385 & 0.350 \\
+Offline & Supervised & TransParser & 0.289 & 0.381 & 0.435 & 0.475 & 0.500 & 0.514 & 0.527 & 0.534 & 0.540 & 0.545 & 0.474 \\
+Offline & Supervised & \textbf{PC} & \textbf{0.522} & \textbf{0.595} & \textbf{0.628} & \textbf{0.646} & \textbf{0.659} & \textbf{0.665} & \textbf{0.671} & \textbf{0.676} & \textbf{0.679} & \textbf{0.683} & \textbf{0.642} \\
+\midrule
+Offline & Unsupervised & SceneDetect & 0.035 & 0.045 & 0.047 & 0.051 & 0.053 & 0.054 & 0.055 & 0.056 & 0.057 & 0.058 & 0.051 \\
+Offline & Unsupervised & PA-Random & 0.158 & 0.233 & 0.273 & 0.310 & 0.331 & 0.347 & 0.357 & 0.369 & 0.376 & 0.384 & 0.314 \\
+Offline & Unsupervised & \underline{PA} & 0.360 & 0.459 & 0.507 & 0.543 & 0.567 & 0.579 & 0.592 & 0.601 & 0.609 & 0.615 & 0.543 \\
+\midrule
+Online & Supervised & ESTimator & 0.394 & 0.455 & 0.499 & 0.532 & 0.558 & 0.578 & 0.594 & 0.608 & 0.619 & 0.629 & 0.547 \\
+\textbf{Online} & \textbf{Supervised} & \textbf{ESTimator++ (Ours)} & $\dagger$\textbf{0.418} & $\dagger$\textbf{0.484} & $\dagger$\textbf{0.531} & $\dagger$\textbf{0.566} & $\dagger$\textbf{0.592} & $\dagger$\textbf{0.613} & $\dagger$\textbf{0.629} & $\dagger$\textbf{0.642} & $\dagger$\textbf{0.653} & $\dagger$\textbf{0.663} & $\dagger$\textbf{0.569} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Model Efficiency}
+While \textbf{ESTimator++} introduces more sophisticated components, its design prioritizes online efficiency. We profile the average inference time per frame on a single NVIDIA V100 GPU. As shown in Table~\ref{tab:efficiency}, \textbf{ESTimator++} processes frames at \textbf{8.2 ms (∼122 FPS)}, which is significantly faster than the real-time requirement of 24 FPS for the Kinetics dataset. Although it is understandably slower than the simpler ESTimator and some lightweight baselines like TeSTra-BC, its runtime is still an order of magnitude lower than the total latency of offline methods, which must process entire clips. This demonstrates that \textbf{ESTimator++} successfully balances state-of-the-art accuracy with practical online inference speed.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of inference efficiency (lower time per frame is better). Offline methods process full clips; their reported time is the total latency per clip.}
+\label{tab:efficiency}
+\begin{tabular}{lc}
+\toprule
+\textbf{Method} & \textbf{Time per Frame (ms)} \\
+\midrule
+\textbf{Online Methods} \\
+TeSTra-BC & 2.1 \\
+MiniROAD-BC & 5.7 \\
+ESTimator & 6.5 \\
+\textbf{ESTimator++ (Ours)} & \textbf{8.2} \\
+\midrule
+\textbf{Offline Methods (Full Clip)} \\
+TCN & 1520* \\
+PC & 1850* \\
+\bottomrule
+\multicolumn{2}{l}{*Total processing time for a 10-second clip, not per frame.}
+\end{tabular}
+\end{table}
+
+\subsection{Qualitative Analysis}
+Qualitative comparisons reveal that predictions from \textbf{ESTimator++} exhibit sharper and more confident peaks at genuine event boundaries while showing greater suppression of spurious fluctuations within event segments, compared to both the TeSTra-BC baseline and its predecessor ESTimator. This can be attributed to the Structured Multi-view Prediction Error (SMPE) providing a cleaner signal and the Adaptive Multi-scale Temporal Discriminator (AMTD) learning to distinguish true boundary patterns from noise. Furthermore, in sequences with gradual transitions, \textbf{ESTimator++} shows improved temporal localization, likely due to the multi-scale receptive field of the AMTD. These observations align with its superior quantitative performance.

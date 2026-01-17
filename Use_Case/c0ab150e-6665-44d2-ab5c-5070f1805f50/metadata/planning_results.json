@@ -1,0 +1,51 @@
+{
+  "ablation_figures": [
+    {
+      "filename": "ablation_components_line_plot.png",
+      "description": "A line plot showing the cumulative improvement in Average F1 score as each proposed component is sequentially added to the baseline model. X-axis represents the variants in order: Baseline, +HMT, +SMPE, +SCL, +AMTD. Y-axis shows the Average F1 score (ranging from 0.715 to 0.778). The line connects the points with markers at each variant, and annotations indicate the delta improvements (+0.018, +0.021, +0.015, +0.029). This highlights the synergistic effect of all components, with the full model achieving the highest performance.",
+      "old_string": "We then sequentially integrate our proposed components, with results summarized in Table~\\ref{tab:ablation_components}."
+    },
+    {
+      "filename": "ablation_smpe_bar_chart.png",
+      "description": "A bar chart comparing the Average F1 scores for different combinations of error components in the Structured Multi-view Prediction Error (SMPE). X-axis lists the variants: Full SMPE, w/o E^{(r)}, w/o E^{(s)}, w/o E^{(m)}, Only E^{(r)}, Only E^{(s)}, Only E^{(m)}. Y-axis shows Average F1 scores (ranging from 0.738 to 0.778). Bars are colored differently for full, ablated, and single-component variants. This illustrates that the full SMPE outperforms all partial or single-error configurations, with the largest drop when removing Predictive Smoothness Error.",
+      "old_string": "Results are presented in Table~\\ref{tab:ablation_smpe}."
+    },
+    {
+      "filename": "ablation_amtd_scatter_plot.png",
+      "description": "A scatter plot visualizing the Average F1 scores for variants of the Adaptive Multi-scale Temporal Discriminator (AMTD). X-axis categorically positions the variants: Full AMTD, Replace with OBD, Single-scale TCN, Multi-scale TCN w/o Self-Attention Fusion. Y-axis shows Average F1 scores (ranging from 0.748 to 0.778). Points are marked with different shapes and colors, connected by lines to show performance drops from the full model. This emphasizes the contributions of multi-scale perception and adaptive fusion to the AMTD's effectiveness.",
+      "old_string": "Results are shown in Table~\\ref{tab:ablation_amtd}."
+    },
+    {
+      "filename": "ablation_scl_box_plot.png",
+      "description": "A box plot (simulated for single values as points with pseudo-distributions for visualization) comparing Average F1 scores for different combinations of the Structural Consistency Loss (SCL) terms. X-axis lists the variants: L_{Focal} only, L_{Focal} + L_{Smooth}, L_{Focal} + L_{Cluster}, Full SCL. Y-axis shows Average F1 scores (ranging from 0.754 to 0.769). Each 'box' represents the score with minimal spread for illustration, highlighting improvements from adding smoothness and clustering losses. This demonstrates that the full SCL provides the best performance by optimizing local and global coherence.",
+      "old_string": "As shown in Table~\\ref{tab:ablation_loss},"
+    }
+  ],
+  "main_result_figures": [
+    {
+      "filename": "online_kinetics_f1_lineplot.png",
+      "description": "A line plot comparing F1 scores of various online methods (TeSTra-BC, Sim-On-BC, OadTR-BC, MiniROAD-BC, ESTimator, ESTimator++) across Rel.Dis thresholds from 0.05 to 0.5 on the Kinetics-GEBD validation set. X-axis: Rel.Dis thresholds (0.05 to 0.5 in steps of 0.05), Y-axis: F1 scores. Each method is represented by a distinct line with markers. Highlights that ESTimator++ consistently outperforms others, especially at lower thresholds, with an average F1 of 0.778, showing +3.0% improvement over ESTimator.",
+      "old_string": "On Kinetics-GEBD (Table~\\ref{tab:online_k400}), \\textbf{ESTimator++} sets a new state-of-the-art, outperforming all online baselines across all Rel.Dis thresholds."
+    },
+    {
+      "filename": "online_tapos_f1_heatmap.png",
+      "description": "A heatmap visualizing F1 scores for online methods (TeSTra-BC, Sim-On-BC, OadTR-BC, MiniROAD-BC, ESTimator, ESTimator++) across Rel.Dis thresholds from 0.05 to 0.5 and the average on the TAPOS validation set. Rows: methods, Columns: Rel.Dis thresholds plus average. Color intensity represents F1 score values (darker for higher scores). Emphasizes ESTimator++'s superiority at stricter thresholds, achieving an average F1 of 0.569, with +2.2% over ESTimator.",
+      "old_string": "A similar trend is observed on TAPOS (Table~\\ref{tab:online_tapos}). \\textbf{ESTimator++} achieves the best average F1 score of \\textbf{0.569}, outperforming ESTimator by +2.2\\% and MiniROAD-BC by +4.1\\%."
+    },
+    {
+      "filename": "offline_kinetics_avgf1_barchart.png",
+      "description": "A bar chart comparing average F1 scores of offline and online methods (including supervised and unsupervised offline like BMN, TCN, PC, CoSeg, and online like ESTimator, ESTimator++) on the Kinetics-GEBD dataset. X-axis: methods grouped by setting (offline supervised, offline unsupervised, online), Y-axis: average F1 scores. Bars are colored by setting, with error bars if applicable (though not in data). Illustrates that ESTimator++ (0.778) rivals top offline methods like CoSeg (0.782) and surpasses most supervised offline ones except PC.",
+      "old_string": "Remarkably, on Kinetics-GEBD, \\textbf{ESTimator++} with an average F1 of \\textbf{0.778} not only leads all online methods but also competes favorably with state-of-the-art offline approaches."
+    },
+    {
+      "filename": "offline_tapos_f1_scatterplot.png",
+      "description": "A scatter plot showing F1 scores versus Rel.Dis thresholds for offline and online methods on the TAPOS dataset. X-axis: Rel.Dis thresholds (0.05 to 0.5), Y-axis: F1 scores. Each method is a scatter line with points, differentiated by colors and markers (e.g., PC, TCN, PA, ESTimator, ESTimator++). Demonstrates ESTimator++'s performance (avg 0.569) outperforming most offline supervised methods except PC, with strong results at lower thresholds.",
+      "old_string": "On the TAPOS dataset (Table~\\ref{tab:offline_tapos}), \\textbf{ESTimator++} again demonstrates strong competitiveness, achieving an average F1 of \\textbf{0.569}."
+    },
+    {
+      "filename": "inference_efficiency_barchart.png",
+      "description": "A bar chart comparing inference time per frame (in ms) for online methods (TeSTra-BC, MiniROAD-BC, ESTimator, ESTimator++) and noting total clip times for offline methods (TCN, PC). X-axis: methods, separated into online and offline groups, Y-axis: time (ms), with logarithmic scale for offline to show scale difference. Highlights ESTimator++'s efficiency at 8.2 ms per frame, balancing speed and accuracy for real-time use.",
+      "old_string": "As shown in Table~\\ref{tab:efficiency}, \\textbf{ESTimator++} processes frames at \\textbf{8.2 ms (∼122 FPS)}, which is significantly faster than the real-time requirement of 24 FPS for the Kinetics dataset."
+    }
+  ]
+}

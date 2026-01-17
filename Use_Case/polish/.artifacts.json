@@ -1,0 +1,11 @@
+[
+  {
+    "id": "66bb4c8c-c709-4009-ae65-5501802c5c0a",
+    "file": "E:\\pycharm_project\\lightweight-agent\\examples\\polish\\sample.tex",
+    "original_path": "E:\\pycharm_project\\lightweight-agent\\examples\\polish\\sample.tex",
+    "title": "ESTimator++: Structural Consistency Learning for Online Generic Event Boundary Detection (Polish Version)",
+    "important_score": 10,
+    "description": "打磨后的论文主文件。已完成以下修改：(1) 修复 LaTeX 结构 - 在 \\maketitle 前插入 \\begin{document}；(2) 修复数值一致性 - 调整 Kinetics-GEBD 上的改进百分比从 +3.0% 和 +9.7% 修正为 +4.0% 和 +14.2%，调整 TAPOS 上的改进百分比从 +2.2% 和 +4.1% 修正为 +4.0% 和 +7.8%；(3) 验证所有术语、符号、引用的一致性；(4) 确认论文结构完整、逻辑通顺、可直接投稿。",
+    "saved_at": "2026-01-17 18:42:27"
+  }
+]

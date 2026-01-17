@@ -1,0 +1,88 @@
+{
+  "items": [
+    {
+      "id": "fa0bd9ec-8b41-4fea-bff2-d94c742dc341",
+      "description": "使用 list_directory 探索当前工作目录以了解项目结构",
+      "required_tools": [
+        "list_directory"
+      ],
+      "success_criteria": "成功列出工作目录中的所有文件和子目录，识别出 LaTeX 文件、figures 目录和 planning_results.json",
+      "status": "completed"
+    },
+    {
+      "id": "3fee2cc7-994c-4185-9da6-e73d15655c10",
+      "description": "扫描 figures 目录以识别所有图片文件和子目录",
+      "required_tools": [
+        "list_directory"
+      ],
+      "success_criteria": "成功列出 figures 目录中的所有图片文件和子目录（motivation、algorithm、main_result、ablation 等）",
+      "status": "completed"
+    },
+    {
+      "id": "c8ddfd1c-c8b8-4792-a896-beb2692d762a",
+      "description": "读取 LaTeX 文件以了解文档结构和章节",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "成功读取 LaTeX 文件，识别出文档的主要章节（Introduction、Methodology、Experiments 等）",
+      "status": "completed"
+    },
+    {
+      "id": "ac3b40c1-2e65-49f3-800e-09dfb011df6d",
+      "description": "检查并添加 \\usepackage{graphicx} 包（如果缺失）",
+      "required_tools": [
+        "Read",
+        "BatchEdit"
+      ],
+      "success_criteria": "确保 LaTeX 文档包含 \\usepackage{graphicx} 包，如果缺失则添加",
+      "status": "completed"
+    },
+    {
+      "id": "6e612054-3dc3-4a7e-b07c-dd2c7ac157e6",
+      "description": "读取 planning_results.json 获取 main_result 和 ablation 图片的插入指令",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "成功解析 JSON 文件，获取 main_result_figures 和 ablation_figures 的 old_string 和 new_string",
+      "status": "completed"
+    },
+    {
+      "id": "fb64a992-2ce5-415d-b935-ad17f54ff06a",
+      "description": "使用 JSON 中的指令插入计划好的图片（main_result 和 ablation）",
+      "required_tools": [
+        "BatchEdit"
+      ],
+      "success_criteria": "所有计划好的图片都已使用 old_string 和 new_string 替换成功插入到 LaTeX 文档中",
+      "status": "completed"
+    },
+    {
+      "id": "31b3a3b5-333e-4618-9071-7b6bed96cc29",
+      "description": "读取 motivation 和 algorithm 目录下的 prompt.txt 文件获取图片描述",
+      "required_tools": [
+        "list_directory",
+        "Read"
+      ],
+      "success_criteria": "成功读取所有 *_prompt.txt 文件，获取图片的详细描述",
+      "status": "completed"
+    },
+    {
+      "id": "09891193-453e-49b8-8c5f-54402d3ada3a",
+      "description": "基于描述文件使用合适的标题插入 motivation 和 algorithm 图片",
+      "required_tools": [
+        "BatchEdit"
+      ],
+      "success_criteria": "所有 motivation 和 algorithm 图片都已插入到合适的位置（motivation 在 Introduction，algorithm 在 Methodology），包含合适的标题和标签",
+      "status": "completed"
+    },
+    {
+      "id": "73ef92dd-dc69-4767-a83d-c0004708f1a0",
+      "description": "验证所有图片都已正确插入到 LaTeX 文档中",
+      "required_tools": [
+        "Read"
+      ],
+      "success_criteria": "确认所有图片的 \\includegraphics 命令都已正确插入，路径正确，标题和标签完整",
+      "status": "completed"
+    }
+  ],
+  "created_at": "2026-01-17 18:44:23"
+}

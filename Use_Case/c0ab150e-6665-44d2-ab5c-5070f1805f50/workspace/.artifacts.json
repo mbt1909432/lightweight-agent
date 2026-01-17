@@ -1,0 +1,11 @@
+[
+  {
+    "id": "db362432-67d5-4b1d-a3a7-70f23584cd15",
+    "file": "E:\\pycharm_project\\lightweight-agent\\examples\\c0ab150e-6665-44d2-ab5c-5070f1805f50\\workspace\\original_tex.tex",
+    "original_path": "E:\\pycharm_project\\lightweight-agent\\examples\\c0ab150e-6665-44d2-ab5c-5070f1805f50\\workspace\\original_tex.tex",
+    "title": "Modified LaTeX Document with Inserted Figures",
+    "important_score": 10,
+    "description": "LaTeX document with all figures successfully inserted at semantically appropriate locations. Contains 10 figures total: 1 motivation figure (in Introduction), 1 algorithm figure (in Method), 5 main_result figures (in Experiments), and 4 ablation figures (in Ablation Studies). All figures have proper captions, labels, and are referenced with \\includegraphics commands. The document includes the graphicx package for figure support.",
+    "saved_at": "2026-01-17 18:49:08"
+  }
+]
