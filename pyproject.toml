@@ -30,7 +30,7 @@ classifiers = [
 dependencies = [
     "openai>=1.0.0",
     "anthropic>=0.18.0",
-    "httpx==0.27.2",
+    "httpx>=0.27.2",
     "rich>=13.0.0",
     "matplotlib>=3.7.0",
     "numpy>=1.24.0",
