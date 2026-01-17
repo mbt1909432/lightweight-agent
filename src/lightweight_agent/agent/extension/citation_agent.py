@@ -213,8 +213,8 @@ class CitationAgent(TodoBasedAgent):
         # Remove run_python_file tool (not needed for citation tasks)
         self.unregister_tool("run_python_file")
         
-        # Remove write_file tool (not needed for citation tasks - use batch_edit for modifications, save_important_artifacts/bibtex_save for saving)
-        self.unregister_tool("write_file")
+        # Remove Write tool (not needed for citation tasks - use batch_edit for modifications, save_important_artifacts/bibtex_save for saving)
+        self.unregister_tool("Write")  # WriteTool 的工具名称是 "Write"
         
         # Replace EditTool with BatchEditTool
         self.unregister_tool("Edit")
@@ -238,7 +238,7 @@ class CitationAgent(TodoBasedAgent):
         
         Note: This method registers citation-specific tools in addition to the default tools
         already registered by TodoBasedAgent (ReadTool, WriteTool, EditTool, ListDirTool, and TODO tools).
-        The run_python_file and write_file tools have been removed (not needed for citation tasks).
+        The run_python_file and Write tools have been removed (not needed for citation tasks).
         EditTool has been replaced with BatchEditTool for more efficient batch editing.
         The CitationAgent has access to:
         - 3 default tools (ReadTool, BatchEditTool, ListDirTool) - WriteTool and EditTool removed/replaced

@@ -16,7 +16,8 @@ class TodoBasedAgent(ReActAgent):
         allowed_paths: Optional[List[str]] = None,
         blocked_paths: Optional[List[str]] = None,
         session_id: Optional[str] = None,
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        vision_client: Optional[BaseClient] = None
     ):
         """
         Initialize TODO-based Agent
@@ -27,6 +28,7 @@ class TodoBasedAgent(ReActAgent):
         :param blocked_paths: List of blocked paths
         :param session_id: Session ID (optional, auto-generated UUID if not provided)
         :param system_prompt: Custom system prompt (optional)
+        :param vision_client: Optional separate client for vision tools (if not provided, uses client)
         """
         # Initialize parent ReActAgent (without system_prompt first)
         super().__init__(
@@ -35,7 +37,8 @@ class TodoBasedAgent(ReActAgent):
             allowed_paths=allowed_paths,
             blocked_paths=blocked_paths,
             session_id=session_id,
-            system_prompt=None  # We'll set it after registering TODO tools
+            system_prompt=None,  # We'll set it after registering TODO tools
+            vision_client=vision_client
         )
         
         # Register TODO tools
