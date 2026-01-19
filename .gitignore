@@ -134,6 +134,17 @@ dmypy.json
 *.log
 .env.local
 .env.*.local
-examples/
+# Examples
+# Ignore local/generated examples workspace content; keep selected example entrypoints.
+examples/**
+!examples/proposal_agent_example.py
+examples/.env
+
+# Local Cursor/SpecStory history (do not commit)
+.specstory/
+
+# Generated artifacts from local runs (do not commit)
+Use_Case/polish/.artifacts.json
+Use_Case/polish/.todo_list.json
 
 test_function/
