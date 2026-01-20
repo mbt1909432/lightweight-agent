@@ -8,7 +8,8 @@ from ..session.session import Session
 from ..clients.base import BaseClient
 from ..tools.registry import ToolRegistry
 from ..tools.base import Tool
-from ..tools.builtin import ReadTool, WriteTool, EditTool, ListDirTool, RunPythonFileTool
+from ..tools.builtin import ReadTool, WriteTool, EditTool, ListDirTool, RunPythonFileTool, RunNodeFileTool
+from ..tools.extensions import SkillTool
 from ..models import GenerateResponse, TokenUsage
 from .prompt_builder import build_system_prompt
 from .pretty_print import (
@@ -94,7 +95,9 @@ class ReActAgent:
             WriteTool(self.session),
             EditTool(self.session),
             ListDirTool(self.session),
-            RunPythonFileTool(self.session)
+            RunPythonFileTool(self.session),
+            RunNodeFileTool(self.session),
+            SkillTool(self.session),
         ]
         for tool in tools:
             self._tool_registry.register(tool)
