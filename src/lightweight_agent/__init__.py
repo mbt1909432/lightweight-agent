@@ -25,7 +25,7 @@ try:
 except Exception:  # pragma: no cover
     AnthropicClient = None  # type: ignore
 
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __all__ = [
     "OpenAIClient",
     "AnthropicClient",

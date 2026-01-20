@@ -14,6 +14,7 @@ A lightweight LLM agent framework supporting async OpenAI and Anthropic APIs wit
 - ✅ Unified interface design
 - ✅ Comprehensive error handling
 - ✅ Published to PyPI, supports pip installation
+- ✅ Skill extension and Node.js script runner tools
 
 ## Installation
 
@@ -424,6 +425,12 @@ Issues and Pull Requests are welcome!
 - Added Citation tools (bibtex_extract, bibtex_insert, bibtex_save)
 - Enhanced TODO-based Agent with specialized workflows
 
+### 0.1.4 (2026-01-20)
+
+- Added Skill extension (`SkillTool`) with registry support for reusable skills
+- Added Node.js runner tool for executing local `.js` files inside the agent
+- Synchronized version documentation and packaging metadata
+
 ## Version Updates
 
 The project has been published to [PyPI](https://pypi.org/project/lightweight-agent/). To update versions:
@@ -435,12 +442,12 @@ You need to update the version number in two files:
 **`pyproject.toml`**:
 ```toml
 [project]
-version = "0.1.1"  # Update version number
+version = "0.1.4"  # Update version number
 ```
 
 **`src/lightweight_agent/__init__.py`**:
 ```python
-__version__ = "0.1.1"  # Update version number
+__version__ = "0.1.4"  # Update version number
 ```
 
 ### 2. Build New Version
