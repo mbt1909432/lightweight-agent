@@ -58,8 +58,9 @@ Your workflow: extract BibTeX entries from source files and systematically inser
   - Identify all citation locations in LaTeX file
   - Insert citations using BatchEdit tool (2-5 calls, but insert as many citations as possible in each call - see Step 4a)
   - Use bibtex_insert tool to insert all remaining citations (see Step 4b)
+  - Add bibliography style and bibliography commands at end of file to prevent overflow (see Step 5)
   - Verify all citations are properly inserted
-- Organize TODOs in a logical order (explore and read first, then extract, then insert)
+- Organize TODOs in a logical order (explore and read first, then extract, then insert, then add bibliography commands)
 
 ### Step 2: Explore Directory and Read Files
 - Execute the TODO items for exploring directory and reading files
@@ -92,22 +93,37 @@ Your workflow: extract BibTeX entries from source files and systematically inser
   3. Distributes ALL remaining (uninserted) entries evenly across all existing `\\cite{}` or `\\citep{}` commands
 - **This tool ensures completeness** - it is a mandatory step that guarantees ALL extracted entries are inserted, regardless of what was manually inserted in Phase 4a
 
-### Step 5: Execute TODOs Systematically
+### Step 5: Add Bibliography Commands to Prevent Overflow (Execute TODO)
+- **AFTER** all citations are inserted (after Step 4), add bibliography style and bibliography commands at the end of the LaTeX file
+- **CRITICAL**: This step prevents citation overflow issues in LaTeX compilation
+- Use `BatchEdit` tool to add the following commands at the end of the file (before `\\end{document}` if present, or at the very end):
+  ```
+  \\bibliographystyle{IEEEtran}  % 改为IEEEtran，它自动处理作者省略
+  \\bibliography{references}
+  ```
+- **Important notes**:
+  - If the file already contains `\\bibliographystyle{}` or `\\bibliography{}` commands, check if they need to be updated
+  - If `\\end{document}` exists, add the commands before it
+  - If no `\\end{document}` exists, add the commands at the very end of the file
+  - The bibliography file name should match the actual .bib file name (usually `references.bib` or similar)
+  - Use `read_file` to check the current end of the file before adding these commands
+
+### Step 6: Execute TODOs Systematically
 - Work through each TODO item one by one in the order they were created
 - For each TODO item:
   1. Mark it as "in_progress" using `update_todo_status` when you start working on it
   2. Use appropriate tools to complete the task
   3. Mark it as "completed" using `update_todo_status` when finished
   4. If a TODO fails, mark it as "failed" and note the reason
-- Steps 2, 3, and 4 above are executed as part of this systematic TODO execution process
+- Steps 2, 3, 4, and 5 above are executed as part of this systematic TODO execution process
 
-### Step 6: Save Important Artifacts
+### Step 7: Save Important Artifacts
 - **ONLY AFTER ALL TODOs ARE COMPLETED**: Use `save_important_artifacts` to save:
-  - The modified LaTeX file with inserted citations
+  - The modified LaTeX file with inserted citations and bibliography commands
   - Documentation or summaries of the citation insertion process
 - **See "Key Constraints" section below for file naming rules**
 
-### Step 7: Final Response
+### Step 8: Final Response
 - After saving artifacts, provide a final summary response WITHOUT using any tools
 - The final response (without tool calls) will terminate the conversation
 - Summarize what was accomplished, how many citations were inserted, and what artifacts were saved"""
@@ -151,8 +167,21 @@ Your workflow: extract BibTeX entries from source files and systematically inser
   3. Distributes ALL remaining (uninserted) entries evenly across all existing `\\cite{}` or `\\citep{}` commands in the document
 - **This is a mandatory step** - it guarantees completeness by ensuring ALL extracted entries are inserted, regardless of manual insertion results
 
+### BatchEdit (Adding Bibliography Commands)
+- Use `BatchEdit` tool to add bibliography style and bibliography commands at the end of the LaTeX file
+- **When to use**: After all citations are inserted (Step 5)
+- **What to add**: Add the following at the end of the file (before `\\end{document}` if present):
+  ```
+  \\bibliographystyle{IEEEtran}  % 改为IEEEtran，它自动处理作者省略
+  \\bibliography{references}
+  ```
+- **Important**: 
+  - Check if these commands already exist before adding
+  - Verify the bibliography file name matches the actual .bib file (e.g., `references.bib`)
+  - Read the end of the file first to determine the exact insertion location
+
 ### save_important_artifacts
-- Use `save_important_artifacts` to save modified LaTeX files **after all citations are inserted**
+- Use `save_important_artifacts` to save modified LaTeX files **after all citations are inserted and bibliography commands are added**
 - **See "Key Constraints" section above for file naming rules**"""
     
     # Assemble prompt
