@@ -116,8 +116,24 @@ class VisionTool(Tool):
                     "error": f"Image file too large: {file_size_mb:.2f}MB. Maximum size: {max_size_mb}MB. Please compress or resize the image."
                 }, ensure_ascii=False)
             
-            # Get client from session (prefer vision_client if available)
-            client = getattr(self.session, 'vision_client', None) or self.session.client
+            # Get client from session - vision_client must be explicitly provided
+            client = getattr(self.session, 'vision_client', None)
+            if client is None:
+                logger.error("[vision_analyze] vision_client is not set. Vision tools require a separate vision_client to be provided.")
+                return json.dumps({
+                    "error": "vision_client is not configured. Vision tools require a separate vision_client to be provided when initializing the agent/session."
+                }, ensure_ascii=False)
+            
+            # Determine client type and model
+            if isinstance(client, OpenAIClient):
+                client_type = "OpenAI"
+                client_model = getattr(client, 'model', 'unknown')
+            elif AnthropicClient is not None and isinstance(client, AnthropicClient):
+                client_type = "Anthropic"
+                client_model = getattr(client, 'model', 'unknown')
+            else:
+                client_type = type(client).__name__
+                client_model = getattr(client, 'model', 'unknown')
             
             # Determine client type and create appropriate message
             if isinstance(client, OpenAIClient):
@@ -203,7 +219,7 @@ class VisionTool(Tool):
                     system = "你是一个专业的图片分析助手，能够详细准确地描述和分析图片内容。"
                     messages = [image_message]
                     
-                    # Log request details
+                    # Log request details (client_model and client_type are already defined above)
                     logger.info(f"[vision_analyze] Calling Anthropic API with model={client_model}, system_prompt_length={len(system)}")
                     logger.debug(f"[vision_analyze] Messages structure: {len(messages)} message(s), content items: {sum(len(m.get('content', [])) for m in messages)}")
                     
@@ -287,6 +303,7 @@ class VisionTool(Tool):
                         "suggestion": "Please check: 1) Image file is valid and readable, 2) Image size is within limits (max 5MB for Anthropic), 3) Image format matches media_type, 4) API credentials are correct, 5) Base URL is correct"
                     }, ensure_ascii=False)
             else:
+                # client_type is already defined above
                 logger.error(f"[vision_analyze] Unsupported client type: {client_type}")
                 return json.dumps({
                     "error": f"Unsupported client type: {client_type}. Vision tool only supports OpenAIClient and AnthropicClient."
