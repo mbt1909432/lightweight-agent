@@ -9,6 +9,7 @@ from .run_node_file_tool import RunNodeFileTool
 from .create_todo_list_tool import CreateTodoListTool
 from .update_todo_status_tool import UpdateTodoStatusTool
 from .save_important_artifacts_tool import SaveImportantArtifactsTool
+from .image_edit_tool import ImageEditTool
 
-__all__ = ["ReadTool", "WriteTool", "EditTool", "BatchEditTool", "ListDirTool", "RunPythonFileTool", "RunNodeFileTool", "CreateTodoListTool", "UpdateTodoStatusTool", "SaveImportantArtifactsTool"]
+__all__ = ["ReadTool", "WriteTool", "EditTool", "BatchEditTool", "ListDirTool", "RunPythonFileTool", "RunNodeFileTool", "CreateTodoListTool", "UpdateTodoStatusTool", "SaveImportantArtifactsTool", "ImageEditTool"]
 

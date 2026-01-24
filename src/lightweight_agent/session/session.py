@@ -4,10 +4,14 @@ import platform
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
+
 from ..clients.base import BaseClient
 from ..models import TokenUsage
 from .history import MessageHistory
+
+if TYPE_CHECKING:
+    from ..clients.banana_image_client import BananaImageClient
 
 
 class Session:
@@ -21,7 +25,8 @@ class Session:
         allowed_paths: Optional[List[str]] = None,
         blocked_paths: Optional[List[str]] = None,
         session_id: Optional[str] = None,
-        vision_client: Optional[BaseClient] = None
+        vision_client: Optional[BaseClient] = None,
+        image_client: Optional["BananaImageClient"] = None
     ):
         """
         Initialize Session
@@ -32,7 +37,8 @@ class Session:
         :param allowed_paths: List of allowed paths (optional, None=only working directory, each path in the list must be absolute. Note: working directory is always allowed, no need to add to the list)
         :param blocked_paths: List of blocked paths (optional, each path in the list must be absolute)
         :param session_id: Session ID (optional, auto-generated UUID if not provided)
-        :param vision_client: Optional separate client for vision tools (if not provided, uses client)
+        :param vision_client: Optional separate client for vision tools (if not provided, vision tools will not be available)
+        :param image_client: Optional BananaImageClient for image editing (if not provided, image editing is not available)
         :raises ValueError: If paths in working_dir, allowed_paths, or blocked_paths are not absolute paths
         """
         if not os.path.isabs(working_dir):
@@ -42,7 +48,8 @@ class Session:
         self.working_dir.mkdir(parents=True, exist_ok=True)
         
         self.client = client
-        self.vision_client = vision_client if vision_client is not None else client
+        self.vision_client = vision_client  # Can be None - no fallback to client
+        self.image_client = image_client
         
         if allowed_paths:
             for p in allowed_paths:
