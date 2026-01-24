@@ -9,6 +9,8 @@ from .extension.figure_agent import FigureAgent
 from .extension.polish_agent import PolishAgent
 from .extension.matplotlib_fix_agent import MatplotlibFixAgent
 from .extension.proposal_agent import ProposalAgent
+from .extension.revision_agent import RevisionAgent
+from src.lightweight_agent.agent.extension.discarded.table_master_agent import TableMasterAgent
 
 __all__ = [
     "ReActAgent",
@@ -19,5 +21,8 @@ __all__ = [
     "PolishAgent",
     "MatplotlibFixAgent",
     "ProposalAgent",
+    "RevisionAgent",
+    "TableMasterAgent",
+    "ImageEditAgent",
 ]
 
