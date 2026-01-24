@@ -72,17 +72,23 @@ def build_figure_agent_system_prompt(
 - 识别文档章节（Introduction、Methodology、Experiments 等）
 - 完成后将相应的 TODO 项标记为已完成
 
-### 步骤 2.5：检查并添加 graphicx 包
+### 步骤 2.5：检查并添加 graphicx 包，检测双栏布局
 - 执行检查并添加 `\\usepackage{{graphicx}}` 的 TODO 项
 - **重要**：在插入任何图片之前，必须确保 LaTeX 文档包含 `\\usepackage{{graphicx}}` 包
 - 使用 `read_file` 读取 LaTeX 文档的序言部分（`\\documentclass` 之后的部分）
 - 检查文档中是否已包含 `\\usepackage{{graphicx}}` 或 `\\usepackage[options]{{graphicx}}`
+- **同时检测双栏布局**：
+  - 检查 `\\documentclass` 是否包含 `[twocolumn]` 选项（如 `\\documentclass[twocolumn]{{article}}`）
+  - 检查文档中是否包含 `\\twocolumn` 命令
+  - 如果检测到双栏布局，**必须**在插入图片时使用 `\\columnwidth` 而不是 `\\textwidth`（见下面的"双栏布局注意事项"）
 - 如果**没有**找到 `graphicx` 包：
   - 找到 `\\documentclass` 行
   - 在 `\\documentclass` 之后、`\\begin{{document}}` 之前找到合适的位置（通常在第一个 `\\usepackage` 附近）
   - 使用 `BatchEdit` 工具添加 `\\usepackage{{graphicx}}`
+  - 如果检测到双栏布局，考虑同时添加 `\\usepackage{{placeins}}` 以更好地控制浮动体位置
   - 示例：如果文档有 `\\documentclass{{article}}`，在其后添加 `\\usepackage{{graphicx}}`
-- 如果**已经存在** `graphicx` 包，则跳过此步骤
+  - 如果是双栏布局：`\\documentclass[twocolumn]{{article}}`，添加 `\\usepackage{{graphicx}}\n\\usepackage{{placeins}}`
+- 如果**已经存在** `graphicx` 包，则跳过添加步骤，但仍需检测双栏布局
 - 完成后将相应的 TODO 项标记为已完成
 
 ### 步骤 3：读取规划结果 JSON
@@ -161,7 +167,109 @@ def build_figure_agent_system_prompt(
 ### 核心目标
 - **插入图片目录中的所有图片** - 这是主要目标，必须实现
 - 图片应放置在相对于周围文本的语义合适位置
-- 通过定期检查 TODO 状态来跟踪进度"""
+    - 通过定期检查 TODO 状态来跟踪进度
+    
+    ### 双栏布局注意事项（防止文字与图片重叠）
+    - **必须检测文档是否使用双栏布局**：
+      - 检查 `\\documentclass` 是否包含 `[twocolumn]` 选项
+      - 检查文档中是否包含 `\\twocolumn` 命令
+    - **在双栏模式下，图片宽度必须使用 `\\columnwidth` 而不是 `\\textwidth`**：
+      - 正确（双栏模式）：`\\includegraphics[width=0.95\\columnwidth]{{...}}`
+      - 错误（双栏模式）：`\\includegraphics[width=0.95\\textwidth]{{...}}`（会导致图片超出列宽并与文字重叠）
+      - 单栏模式可以使用 `\\textwidth`：`\\includegraphics[width=0.8\\textwidth]{{...}}`
+    - **推荐在双栏模式下添加 `placeins` 包**：
+      - 在序言中添加 `\\usepackage{{placeins}}`
+      - 这有助于更好地控制浮动体位置，防止重叠
+    - **图片宽度建议**：
+      - 双栏模式：使用 `0.95\\columnwidth` 或 `0.9\\columnwidth`（留出边距）
+      - 单栏模式：使用 `0.8\\textwidth` 或 `0.6\\textwidth`
+    
+    ### 关于 caption / label / 引用的强制要求
+    - 每一个 `figure` 和 `table` 都必须满足：
+      - 有清晰、专业的 `\\caption{{...}}`（不能省略）
+      - 有**唯一**的 `\\label{{...}}` 标签，通常采用：
+        - 图：`fig:...`（例如 `fig:main_result`、`fig:ablation`）
+        - 表：`tab:...`（例如 `tab:main_results`、`tab:ablation`）
+    - 正文中**所有**提到图表的地方都要通过 `\\ref{{...}}` 链接到对应标签：
+      - 例如：`as is shown in Table~\\ref{{tab:main_results}}`、`as illustrated in Figure~\\ref{{fig:motivation}}`
+      - 不允许出现“口头提到表/图但没有 `\\ref{{...}}` 跳转”的情况
+    - `\\label{{...}}` 必须写在对应 `figure`/`table` 环境内部，通常放在 `\\caption{{...}}` 之后
+    
+    ### Caption 和文本内容的学术严谨性检查（必须严格遵守）
+    - **在生成或修改任何 `\\caption{{...}}` 或文本内容时，必须严格检查以下规则**：
+    
+    #### 1. 数学模式转换 (Math Mode)
+    - **所有数学变量、状态向量、函数符号必须正确包裹在数学模式中**：
+      - 正确：`$R(t)$`、`$J$`、`$A^*$`、`$x_i$`、`$f(x)$`
+      - 错误：`R(t)`、`J`、`A^*`（未使用数学模式）
+    - **希腊字母必须使用数学模式**：
+      - 正确：`$\\alpha$`、`$\\beta$`、`$\\Delta$`、`$\\theta$`
+      - 错误：`alpha`、`beta`、`Delta`（未使用数学模式）
+    - **数学运算符和关系符号必须在数学模式中**：
+      - 正确：`$\\leq$`、`$\\geq$`、`$\\neq$`、`$\\in$`、`$\\sum$`、`$\\prod$`
+      - 错误：`<=`、`>=`、`!=`、`in`（未使用数学模式）
+    - **数值范围、负号、减号在数学上下文中应使用数学模式**：
+      - 正确：`$-12.1$`、`$[0, 1]$`、`$x - y$`
+      - 错误：`-12.1`、`[0, 1]`、`x - y`（在数学上下文中未使用数学模式）
+    
+    #### 2. 转义字符处理 (Character Escaping)
+    - **百分号 (%)**：必须转义为 `\\%`
+      - 正确：`10\\% improvement`、`accuracy of 95\\%`
+      - 错误：`10% improvement`（会导致该行后续代码被注释掉，引发编译报错）
+    - **下划线 (_)**：在文本模式中必须转义为 `\\_`
+      - 正确：`variable\\_name`、`file\\_path`
+      - 错误：`variable_name`（在文本模式中会引发编译错误）
+      - 注意：在数学模式中（`$...$`）下划线不需要转义，如 `$x_i$` 是正确的
+    - **和号 (&)**：必须转义为 `\\&`
+      - 正确：`A \\& B`
+      - 错误：`A & B`（在表格等环境中会引发错误）
+    - **井号 (#)**：必须转义为 `\\#`
+      - 正确：`number\\#1`
+      - 错误：`number#1`（会引发编译错误）
+    - **美元符号 ($)**：必须转义为 `\\$`
+      - 正确：`cost is \\$100`
+      - 错误：`cost is $100`（会被误认为数学模式开始）
+    - **大括号 ({})**：在文本中必须转义为 `\\{{` 和 `\\}}`
+      - 正确：`set \\{{1, 2, 3\\}}`
+      - 错误：`set {1, 2, 3}`（会被误认为 LaTeX 命令）
+    
+    #### 3. 下标规范化 (Subscript Logic)
+    - **变量下标（索引变量）应保持斜体**：
+      - 正确：`$x_i$`、`$A_{ij}$`、`$n_k$`（下标是变量，保持斜体）
+      - 注意：在数学模式中，下标默认是斜体，这是正确的
+    - **说明性/缩写下标应使用 `\\mathrm{{}}` 或 `\\text{{}}` 转为正体**：
+      - 正确：`$x_{\\mathrm{{co}}}$`、`$f_{\\mathrm{{max}}}$`、`$v_{\\mathrm{{in}}}$`、`$A_{\\text{{opt}}}$`
+      - 错误：`$x_{co}$`、`$f_{max}$`、`$v_{in}$`（说明性下标应使用正体）
+    - **常见说明性下标示例**：
+      - `\\mathrm{{min}}`、`\\mathrm{{max}}`、`\\mathrm{{avg}}`、`\\mathrm{{std}}`
+      - `\\mathrm{{in}}`、`\\mathrm{{out}}`、`\\mathrm{{co}}`、`\\mathrm{{opt}}`
+      - `\\mathrm{{ref}}`、`\\mathrm{{true}}`、`\\mathrm{{pred}}`
+    
+    #### 4. 标点与结构 (Punctuation & Structure)
+    - **Caption 开头应有一个清晰的标题（名词短语）**：
+      - 正确：`\\caption{{Main results comparison. The proposed method outperforms baselines.}}`
+      - 正确：`\\caption{{Algorithm workflow.}}`
+    - **解释性句子的句末必须有句号**：
+      - 正确：`\\caption{{Performance comparison. Our method achieves 95\\% accuracy.}}`
+      - 错误：`\\caption{{Performance comparison. Our method achieves 95\\% accuracy}}`（缺少句号）
+    - **英文字符与数字/公式之间的间距**：
+      - LaTeX 通常自动处理间距，但需注意文本与公式的衔接
+      - 正确：`accuracy of $95\\%$`（LaTeX 会自动添加适当间距）
+      - 正确：`value $x_i$ is computed`（LaTeX 会自动添加适当间距）
+    - **Caption 结构建议**：
+      - 第一句：简洁的标题性描述（名词短语或简短句子）
+      - 后续句子：详细解释（如果需要）
+      - 示例：`\\caption{{Experimental setup. (a) Training configuration. (b) Evaluation metrics.}}`
+    
+    #### 5. 综合检查清单
+    - 在生成或修改任何 caption 或文本内容后，必须逐一检查：
+      1. ✅ 所有数学变量、符号是否都包裹在 `$...$` 中？
+      2. ✅ 所有特殊字符（`%`, `_`, `&`, `#`, `$`, `{{`, `}}`）是否已正确转义？
+      3. ✅ 说明性下标是否使用了 `\\mathrm{{}}` 或 `\\text{{}}`？
+      4. ✅ Caption 是否有清晰的标题开头？
+      5. ✅ 所有句子是否以句号结尾？
+      6. ✅ 文本与公式之间的衔接是否自然？
+    """
     
     tool_usage_guidelines = """## 工具使用指南
 
@@ -207,6 +315,7 @@ def build_figure_agent_system_prompt(
   - 按预期插入位置对图片进行分组
   - 尽可能在一次 BatchEdit 调用中插入多张图片
 - **LaTeX 图片代码模板**（用于基于描述文件的图片）：
+  - **单栏模式模板**：
   ```latex
   \\begin{{figure}}[htbp]
       \\centering
@@ -215,13 +324,26 @@ def build_figure_agent_system_prompt(
       \\label{{fig:{label}}}
   \\end{{figure}}
   ```
+  - **双栏模式模板**（必须使用 `\\columnwidth`）：
+    ```latex
+    \\begin{{figure}}[htbp]
+        \\centering
+        \\includegraphics[width=0.95\\columnwidth]{{figures/{subdir}/{filename}}}
+        \\caption{{基于 prompt.txt 描述的简洁标题}}
+        \\label{{fig:{label}}}
+    \\end{{figure}}
+    ```
 - **重要**：
+  - **在插入图片前，必须先检测文档是否使用双栏布局**（见步骤 2.5）
+  - **根据布局模式选择正确的宽度单位**：
+    - 双栏模式：**必须**使用 `\\columnwidth`（如 `0.95\\columnwidth`）
+    - 单栏模式：使用 `\\textwidth`（如 `0.8\\textwidth`）
   - 在 BatchEdit 的 old_string 和 new_string 中使用双反斜杠（`\\\\`）
-  - 对于计划好的图片：使用 JSON 中的确切字符串
+  - 对于计划好的图片：使用 JSON 中的确切字符串，但**如果检测到双栏布局，需要将 JSON 中的 `\\textwidth` 替换为 `\\columnwidth`**
   - 对于 motivation 和 algorithm 图片：基于 prompt.txt 文件中的描述生成简洁的描述性标题
-  - 使用有意义的标签（fig:motivation、fig:algorithm 或顺序数字）
+  - 使用有意义且**全局唯一**的标签（如 `fig:motivation`、`fig:algorithm`、`fig:main_result_1`、`tab:main_results` 等），避免与现有 `\\label{{...}}` 冲突
+  - 确保正文中凡是提到这些图表的地方，都通过 `\\ref{{...}}` 进行引用，例如 `as is shown in Table~\\ref{{tab:main_results}}`
   - 确保图片路径相对于 LaTeX 文件位置（如果存在子目录则包含子目录）
-  - 使用合适的图片宽度（通常为 0.8\\textwidth 或 0.6\\textwidth）
 
 ### save_important_artifacts
 - 在**所有图片插入后**使用 `save_important_artifacts` 保存修改后的 LaTeX 文件

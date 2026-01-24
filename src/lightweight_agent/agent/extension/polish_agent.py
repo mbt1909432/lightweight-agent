@@ -45,6 +45,12 @@ def build_polish_agent_system_prompt(
 
     quality_requirements = """## 质量要求（严格遵守）
 
+### ⚠️ LaTeX 表格溢出问题（必须优先处理）
+- **表格溢出是 LaTeX 编译的常见且严重问题，必须严格检查并彻底解决。**
+- 所有表格必须确保在编译后不会超出页面边界。
+- 处理优先级：`adjustbox` 自动缩放 > 字体缩小 + 列间距调整 > 表头优化 > 表格旋转 > 重新设计表格结构。
+- 详细处理方法见下方 "Overleaf 编译兼容性" 和 "LaTeX 编译兼容性检查" 部分。
+
 ### 引用必须准确
 - 所有文献引用必须保持真实、准确（作者、标题、年份、期刊/会议等信息不能胡编）。
 - 如需补充新引用，必须确保与领域常识和上下文一致，不要凭空捏造明显不存在的论文。
@@ -72,10 +78,65 @@ def build_polish_agent_system_prompt(
 - 检查并修复常见的 LaTeX 编译错误：
   - **缺少 `\\begin{{document}}`：确保在 `\\documentclass` 和 `\\usepackage` 之后、`\\maketitle` 和 `\\begin{{abstract}}` 等命令之前，必须有 `\\begin{{document}}`。如果发现 `\\maketitle`、`\\begin{{abstract}}` 或其他文档内容出现在 `\\begin{{document}}` 之前，必须在适当位置插入 `\\begin{{document}}`。**
   - 未闭合的环境（如 `\\begin{{...}}` 缺少对应的 `\\end{{...}}`）。
+  - **花括号/方括号不成对**：重点检查 `\\label{{...}}`、`\\ref{{...}}`、`\\cite{{...}}`、`\\caption{{...}}` 等命令是否出现漏写/多写括号（例如把 `\\label{tab:main_results}` 误写成 `\\label{tab{tab:main_results}` 会直接导致解析崩溃）。
   - 未定义的命令或包（确保所有使用的命令都有对应的包引入）。
   - 特殊字符转义问题（如 `&`、`%`、`$`、`#`、`_`、`^` 等需要正确转义）。
   - 图表路径问题（确保 `\\includegraphics` 和 `\\input` 的路径正确，使用相对路径）。
   - 引用问题（确保所有 `\\cite`、`\\ref`、`\\label` 都有对应的定义）。
+  - **⚠️ 表格溢出问题（必须严格检查）**：检查所有表格是否超出页面宽度，这是 LaTeX 编译的常见问题，必须彻底解决。
+    - **决策流程（按优先级执行）**：
+      1. **表格稍微超出** → 使用 `adjustbox{max width=\\textwidth}` 自动缩放（首选方案）。
+      2. **仍然太宽** → 添加 `\\small` + `\\setlength{\\tabcolsep}{5pt}` 缩小字体和列间距。
+      3. **还是太宽** → 缩写列名或分行显示表头，或使用 `\\rotatebox{90}{...}` 旋转表头。
+      4. **极宽表格** → 使用 `landscape` 或 `sidewaystable` 旋转整个表格。
+      5. **列数太多** → 考虑拆分成多个表格或转置表格（行列互换）。
+    - **具体处理方法**：
+      - **方法1：自动缩放（最推荐）**：
+        ```latex
+        \\usepackage{adjustbox}
+        \\begin{table}[htbp]
+        \\centering
+        \\adjustbox{max width=\\textwidth}{
+        \\begin{tabular}{...}
+          ...
+        \\end{tabular}
+        }
+        \\end{table}
+        ```
+        或者使用 `resizebox`：
+        ```latex
+        \\usepackage{graphicx}
+        \\resizebox{\\textwidth}{!}{
+        \\begin{tabular}{...}
+          ...
+        \\end{tabular}
+        }
+        ```
+      - **方法2：缩小字体**：在表格前添加 `\\tiny`、`\\scriptsize`、`\\footnotesize` 或 `\\small`（常用）。
+      - **方法3：调整列间距**：使用 `\\setlength{\\tabcolsep}{4pt}`（默认6pt或8pt）。
+      - **方法4：优化表头**：使用缩写（如 "Accuracy" → "Acc"）、多行标题或旋转表头。
+      - **方法5：旋转表格**：使用 `\\usepackage{pdflscape}` + `\\begin{landscape}...\\end{landscape}` 或 `\\usepackage{rotating}` + `\\begin{sidewaystable}...\\end{sidewaystable}`。
+      - **方法6：改变布局**：转置表格、拆分成多个小表，或使用 `longtable` 跨页。
+      - **方法7：组合策略（最佳实践）**：
+        ```latex
+        \\begin{table}[htbp]
+        \\centering
+        \\small                              % 缩小字体
+        \\setlength{\\tabcolsep}{5pt}        % 减小列间距
+        \\adjustbox{max width=\\textwidth}{  % 自动缩放
+        \\begin{tabular}{lcccccc}
+          ...
+        \\end{tabular}
+        }
+        \\end{table}
+        ```
+      - **方法8：特殊场景**：超宽表格使用 `tabularx` 自动调整列宽，数值对齐使用 `siunitx` 包。
+    - **必需包检查**：确保导言区包含 `\\usepackage{adjustbox}`、`\\usepackage{graphicx}`、`\\usepackage{rotating}`（可选）、`\\usepackage{pdflscape}`（可选）、`\\usepackage{booktabs}`、`\\usepackage{array}`、`\\usepackage{tabularx}`（可选）、`\\usepackage{siunitx}`（可选）。
+    - **⚠️ 重要提醒**：
+      - 不要过度缩小字体（避免小于 `\\footnotesize`），保持可读性。
+      - 同一文档中的类似表格使用相同方法，保持一致性。
+      - 确保 `caption` 和 `label` 位置正确（`label` 始终放在 `caption` 之后）。
+      - **最终必须确保所有表格在编译后不会超出页面边界，这是硬性要求。**
 - 在修改 LaTeX 文件时：
   - 保持 LaTeX 语法正确，不要破坏原有的文档结构。
   - 如果删除内容，确保不会导致环境不匹配或命令未定义。
@@ -97,7 +158,7 @@ def build_polish_agent_system_prompt(
   - 检查各节结构是否合理（Introduction / Method / Experiments / Conclusion 等）。
   - 对照表格与图表，统一数值与文字描述。
   - 统一术语、符号和记号（例如同一个方法不要出现多个不同写法）。
-  - **如果是 LaTeX 文件，检查并修复编译兼容性问题，确保可在 Overleaf 上编译，包括：检查是否存在 `\\begin{{document}}`，确保 `\\maketitle`、`\\begin{{abstract}}` 等命令在 `\\begin{{document}}` 之后。**
+  - **如果是 LaTeX 文件，检查并修复编译兼容性问题，确保可在 Overleaf 上编译，包括：检查是否存在 `\\begin{{document}}`，确保 `\\maketitle`、`\\begin{{abstract}}` 等命令在 `\\begin{{document}}` 之后；⚠️ 必须严格检查并修复所有表格溢出问题（这是常见且严重的编译问题，必须使用 `adjustbox`、字体缩小、列间距调整、表头优化、表格旋转或重新设计表格结构等方法彻底解决，确保所有表格不会超出页面边界）。**
 - **重要：TODO 列表的最后一项必须是「调用 `save_important_artifacts` 保存打磨后的论文主文件和相关产物」。**
 - TODO 要覆盖：结构、语言风格、一致性检查与清理，确保没有遗漏。
 
@@ -131,11 +192,16 @@ def build_polish_agent_system_prompt(
 - **LaTeX 编译兼容性检查（针对 .tex 文件）：**
   - **首先检查是否存在 `\\begin{{document}}`：如果发现 `\\maketitle`、`\\begin{{abstract}}` 或其他文档内容出现在 `\\begin{{document}}` 之前，必须在 `\\documentclass` 和 `\\usepackage` 命令之后、第一个文档内容命令之前插入 `\\begin{{document}}`。**
   - 检查所有 `\\begin{{...}}` 和 `\\end{{...}}` 是否匹配。
+  - **检查花括号/方括号是否成对**：尤其是 `\\label{...}` / `\\ref{...}` / `\\cite{...}` / `\\caption{...}`；发现类似 `\\label{tab{tab:...}` 这类嵌套错写必须立刻修正为单层标签（如 `\\label{tab:...}`）。
   - 检查所有特殊字符（`&`、`%`、`$`、`#`、`_`、`^`）是否正确转义。
   - 检查所有 `\\cite`、`\\ref`、`\\label` 是否有对应定义。
   - 检查图表路径是否正确（使用相对路径，确保文件存在）。
   - 检查是否有未闭合的大括号、方括号或命令。
   - 确保所有使用的包都已正确引入（`\\usepackage{{...}}`）。
+  - **⚠️ 检查表格溢出问题（必须严格检查，这是常见编译问题）**：
+    - **识别问题表格**：识别所有可能超出页面宽度的表格（特别是列数多、列标题长的表格）。
+    - **处理方法**：严格按照上方 "Overleaf 编译兼容性" 部分中表格溢出问题的决策流程和具体实现方法进行处理（包括 adjustbox 自动缩放、字体缩小、列间距调整、表头优化、表格旋转等 8 种方法）。
+    - **最终验收**：**必须确保所有表格在编译后不会超出页面边界，这是硬性要求。如果表格仍然溢出，必须继续应用更激进的解决方案，直到问题完全解决。**
 - 全部 TODO 完成后，再调用 `save_important_artifacts` 保存：
   - 打磨后的论文主文件。
   - 如有需要，可附上简短修改说明（例如 `polish_log.txt`）。

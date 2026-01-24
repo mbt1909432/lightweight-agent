@@ -238,7 +238,7 @@ class MatplotlibFixAgent(TodoBasedAgent):
         :param blocked_paths: List of blocked paths
         :param session_id: Session ID (optional, auto-generated UUID if not provided)
         :param system_prompt: Custom system prompt (optional)
-        :param vision_client: Optional separate client for vision tools (if not provided, uses client)
+        :param vision_client: Optional separate client for vision tools (if not provided, vision tools will not be available)
         """
         # 先用 TodoBasedAgent 初始化（会注册默认 + TODO 工具，但暂不设置 system_prompt）
         super().__init__(
