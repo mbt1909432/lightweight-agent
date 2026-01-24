@@ -5,8 +5,7 @@
 
 2) 清理旧构建产物
 ```
-rmdir /s /q dist build
-for /d %d in (*.egg-info) do rmdir /s /q "%d"
+rmdir /s /q dist build for /d %d in (*.egg-info) do rmdir /s /q "%d"
 ```
 
 3) 安装打包工具（如未安装）
