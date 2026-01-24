@@ -431,6 +431,11 @@ Issues and Pull Requests are welcome!
 - Added Node.js runner tool for executing local `.js` files inside the agent
 - Synchronized version documentation and packaging metadata
 
+### 0.1.7 (2026-01-24)
+
+- Insert bibliography commands before citation insertion to avoid citation overflow errors
+- Refresh version documentation examples
+
 ## Version Updates
 
 The project has been published to [PyPI](https://pypi.org/project/lightweight-agent/). To update versions:
@@ -442,12 +447,12 @@ You need to update the version number in two files:
 **`pyproject.toml`**:
 ```toml
 [project]
-version = "0.1.4"  # Update version number
+version = "0.1.7"  # Update version number
 ```
 
 **`src/lightweight_agent/__init__.py`**:
 ```python
-__version__ = "0.1.4"  # Update version number
+__version__ = "0.1.7"  # Update version number
 ```
 
 ### 2. Build New Version

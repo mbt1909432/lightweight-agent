@@ -130,6 +130,9 @@ async def main():
     api_key = os.getenv("LIGHTWEIGHT_AGENT_API_KEY")
     base_url = os.getenv("LIGHTWEIGHT_AGENT_API_BASE")
     model = os.getenv("LIGHTWEIGHT_AGENT_MODEL")
+    print(api_key)
+    print(base_url)
+    print(model)
 
     try:
         client = OpenAIClient(api_key=api_key, base_url=base_url, model=model)
