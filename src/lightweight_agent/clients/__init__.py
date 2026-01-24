@@ -8,5 +8,11 @@ try:
 except Exception:  # pragma: no cover
     AnthropicClient = None  # type: ignore
 
-__all__ = ["BaseClient", "OpenAIClient", "AnthropicClient"]
+# Optional dependency: banana image client
+try:
+    from .banana_image_client import BananaImageClient  # type: ignore
+except Exception:  # pragma: no cover
+    BananaImageClient = None  # type: ignore
+
+__all__ = ["BaseClient", "OpenAIClient", "AnthropicClient", "BananaImageClient"]
 
