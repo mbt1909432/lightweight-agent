@@ -12,7 +12,7 @@ from typing import Optional, List
 
 from ..todo_based_agent import TodoBasedAgent
 from ...clients.base import BaseClient
-from ...tools.builtin import BatchEditTool
+from ...tools.builtin import BatchEditTool, MdToPdfTool
 from ...session.session import Session
 
 
@@ -92,7 +92,8 @@ def build_revision_agent_system_prompt(
   - ...
   - 审稿人 N 相关修改
   - 检查并添加颜色标注所需的 LaTeX 包（xcolor）
-  - 生成 Cover Letter
+  - 生成 Cover Letter（Markdown 格式）
+  - 将 Cover Letter 转换为 PDF（使用 md_to_pdf 工具）
   - 最终一致性检查
   - 保存修订后的论文和 Cover Letter
 - **重要：TODO 列表的最后一项必须是「调用 `save_important_artifacts` 保存修订后的论文主文件、修改后的图表脚本（如有）和 Cover Letter」**
@@ -155,6 +156,10 @@ def build_revision_agent_system_prompt(
 #### 步骤 7：生成 Cover Letter
 - 执行生成 Cover Letter 的 TODO 项
 - 使用 `Write` 工具创建 `cover_letter.md` 或 `cover_letter.tex` 文件
+- **推荐流程**：
+  - 先创建 `cover_letter.md`（Markdown 格式，更易编辑和阅读）
+  - 然后使用 `md_to_pdf` 工具将 `cover_letter.md` 转换为 `cover_letter.pdf`
+  - 这样既保留了可编辑的 Markdown 版本，也生成了正式的 PDF 版本
 - Cover Letter 结构：
   ```
   # Response to Reviewers
@@ -198,7 +203,7 @@ def build_revision_agent_system_prompt(
 - 使用 `save_important_artifacts` 保存：
   - 修订后的论文主文件（.tex）
   - 修改后的图表生成脚本（如有，在 `scripts/` 目录）
-  - Cover Letter（cover_letter.md 或 cover_letter.tex）
+  - Cover Letter（cover_letter.md 和 cover_letter.pdf，如果已转换）
 - 确保所有文件都已正确保存
 - 完成后将相应的 TODO 项标记为已完成"""
 
@@ -347,7 +352,8 @@ We thank all reviewers for their valuable comments...
 - `list_directory`：探索目录结构和查找文件
 - `read_file`：阅读论文、审稿意见、脚本等文件
 - `BatchEdit`：批量修改 LaTeX 文档和脚本文件
-- `Write`：创建 Cover Letter 文件
+- `Write`：创建 Cover Letter 文件（Markdown 格式）
+- `md_to_pdf`：将 Markdown 文件转换为 PDF（用于将 cover_letter.md 转换为 cover_letter.pdf）
 - `run_python_file`：运行修改后的图表生成脚本
 - `save_important_artifacts`：保存修订后的文件
 
@@ -358,7 +364,13 @@ We thank all reviewers for their valuable comments...
   - 确保修改后的 LaTeX 语法正确
 - 使用 `Write` 创建 Cover Letter 时：
   - 优先使用 Markdown 格式（.md），更易读易编辑
-  - 如果需要 LaTeX 格式，确保可以编译
+  - 创建 `cover_letter.md` 后，使用 `md_to_pdf` 工具将其转换为 `cover_letter.pdf`
+  - `md_to_pdf` 工具参数：
+    - `markdown_path`：Cover Letter Markdown 文件的绝对路径（例如：`cover_letter.md`）
+    - `output_path`（可选）：输出 PDF 路径，不提供时自动生成同名 PDF 文件
+- 使用 `md_to_pdf` 时：
+  - 确保输入的 Markdown 文件路径正确
+  - 转换后检查 PDF 文件是否成功生成
 - 使用 `run_python_file` 时：
   - 确保脚本路径正确
   - 确保脚本所需的依赖和输入文件都存在
@@ -418,6 +430,7 @@ class RevisionAgent(TodoBasedAgent):
         - 保留 WriteTool（用于生成 Cover Letter）
         - 保留 RunPythonFileTool（用于修改和运行图表生成脚本）
         - 使用 BatchEditTool 替换 EditTool
+        - 注册 MdToPdfTool（用于将 Cover Letter Markdown 转换为 PDF）
         """
         super().__init__(
             client=client,
@@ -437,6 +450,9 @@ class RevisionAgent(TodoBasedAgent):
         # 使用 BatchEdit 替换默认 EditTool
         self.unregister_tool("Edit")
         self.register_tool(BatchEditTool(self.session))
+        
+        # 注册 MdToPdfTool（用于将 Cover Letter Markdown 转换为 PDF）
+        self.register_tool(MdToPdfTool(self.session))
 
         # 构建专用 system prompt
         if system_prompt is None:
