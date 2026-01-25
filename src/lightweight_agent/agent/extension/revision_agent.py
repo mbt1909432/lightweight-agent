@@ -138,38 +138,48 @@ def build_revision_agent_system_prompt(
     - 方式 2（旁注）：`修改后的文字\\marginpar{\\textcolor{reviewer1color}{R1: 根据审稿人1意见修改}}`
   - 优先使用方式 1，如果空间不足或需要更清晰的标注，使用方式 2
 - **实验图表修订**：
-  - 如果审稿意见涉及图表修改：
-    - **优先方案**：如果图表文件已存在（例如在 `figures/` 目录），可以：
+  - 如果审稿意见涉及实验分析图修改（包括 main result 图和 ablation 图）：
+    - **标准流程（适用于实验分析图，包括 main result 和 ablation）**：
       1. **从 .tex 文件中定位图表文件**：
-         - 根据审稿意见中提到的图表编号（如 Figure 1, Table 2 等），在 .tex 文件中搜索对应的 `\label{fig:...}` 或 `\label{tab:...}`
-         - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
-         - 从 `\includegraphics` 或 `\input` 中提取图表文件路径（如 `figures/fig_motivation1.png`）
-         - **只读取该文件，不要读取其他无关图表**
-      2. 使用 `vision` 工具分析该图表，理解其内容和结构（**仅分析审稿人提到的图表，不要分析其他无关图表**）
-      3. 根据审稿意见，使用 `image_edit` 工具直接编辑图表（调整颜色、标注、布局等）
-      4. 保存编辑后的图表，在 LaTeX 中更新引用（如果文件名改变）
-    - **备选方案**：如果图表由脚本生成：
-      1. 定位 `scripts/` 目录中的相关图表生成脚本
-      2. 使用 `read_file` 读取脚本，理解其结构
-      3. 使用 `BatchEdit` 修改脚本（参数、样式、数据源等）
-      4. 使用 `run_python_file` 运行修改后的脚本生成新图表
-      5. 在 LaTeX 中更新图表引用（如果文件名改变）
-    - 如果图表文件已存在但需要替换，确保新图表文件名正确
+        - 根据审稿意见中提到的图表编号（如 Figure 1, Table 2 等），在 .tex 文件中搜索对应的 `\label{fig:...}` 或 `\label{tab:...}`
+        - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
+        - 从 `\includegraphics` 或 `\input` 中提取图表文件路径（如 `figures/fig_experiment1.png`）
+        - **只读取该文件，不要读取其他无关图表**
+      2. **使用 `vision` 工具分析该图表**：
+        - 理解图表的内容、结构、数据展示方式
+        - 明确需要修改的部分（颜色、标注、布局、数据等）
+        - **仅分析审稿人提到的图表，不要分析其他无关图表**
+      3. **定位并修改生成该图表的代码脚本**：
+        - 在 `scripts/` 目录中定位生成该图表的脚本文件
+        - 使用 `read_file` 读取脚本，理解其结构
+        - 根据审稿意见和 vision 工具的分析结果，使用 `BatchEdit` 修改脚本（参数、样式、数据源、颜色、标注等）
+        - **重要：修改脚本时，必须删除或注释掉所有可能导致程序卡住的代码，如 `plt.show()`、`input()`、`waitKey()` 等交互式代码，确保脚本可以自动运行完成**
+      4. **执行修改后的脚本生成新图表**：
+        - 使用 `run_python_file` 运行修改后的脚本生成新图表
+        - 确保新图表文件正确生成
+        - **注意：如果脚本中包含 `plt.show()` 等交互式代码，必须先删除或注释掉，否则程序会卡住**
+      5. **在 LaTeX 中更新图表引用**：
+        - 如果图表文件名改变，更新 `.tex` 文件中的 `\includegraphics` 或 `\input` 语句
+        - 确保图表引用正确
 - **算法/动机图修订**：
   - 如果审稿意见涉及算法图或动机图：
-    - **优先方案**：如果图片文件已存在（在 `figures/algorithm/` 或 `figures/motivation/` 目录）：
+    - **标准流程（适用于 motivation 和 algorithm 图）**：
       1. **从 .tex 文件中定位图片文件**：
-         - 根据审稿意见中提到的图片编号（如 Algorithm 1, Figure X 等），在 .tex 文件中搜索对应的 `\label{alg:...}` 或 `\label{fig:...}`
-         - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
-         - 从 `\includegraphics` 或 `\input` 中提取图片文件路径（如 `figures/fig_motivation1.png`）
-         - **只读取该文件，不要读取其他无关图片**
-      2. 使用 `vision` 工具分析该图片，理解其内容和结构（**仅分析审稿人提到的图片，不要分析其他无关图片**）
-      3. 根据审稿意见，使用 `image_edit` 工具直接编辑图片（添加标注、修改元素、调整布局等）
-      4. 保存编辑后的图片，在 LaTeX 中更新引用
-    - **备选方案**：如果存在对应的生成脚本：
-      1. 修改脚本并重新生成
-      2. 在 LaTeX 中更新图片引用
-    - 如果不存在脚本且无法直接编辑，记录说明并建议手动处理
+        - 根据审稿意见中提到的图片编号（如 Algorithm 1, Figure X 等），在 .tex 文件中搜索对应的 `\label{alg:...}` 或 `\label{fig:...}`
+        - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
+        - 从 `\includegraphics` 或 `\input` 中提取图片文件路径（如 `figures/fig_motivation1.png`）
+        - **只读取该文件，不要读取其他无关图片**
+      2. **使用 `vision` 工具分析该图片**：
+        - 理解图片的内容、结构、元素布局
+        - 明确需要修改的部分（标注、元素、颜色、布局等）
+        - **仅分析审稿人提到的图片，不要分析其他无关图片**
+      3. **使用 `image_edit` 工具直接编辑图片**：
+        - 根据审稿意见和 vision 工具的分析结果，使用 `image_edit` 工具修改图片
+        - 可以添加标注、修改元素、调整颜色、调整布局等
+        - 确保编辑后的图片符合审稿要求
+      4. **在 LaTeX 中更新图片引用**：
+        - 如果图片文件名改变，更新 `.tex` 文件中的 `\includegraphics` 或 `\input` 语句
+        - 确保图片引用正确
 - **记录修改位置**：
   - 为每条修改记录：
     - 审稿人编号
@@ -408,15 +418,29 @@ We thank all reviewers for their valuable comments...
     - 根据审稿意见中提到的图表编号（如 Figure 1, Table 2, Algorithm 1 等），先在 .tex 文件中定位对应的图表引用
     - 在 .tex 文件中搜索 `\label{fig:...}`, `\label{tab:...}`, `\label{alg:...}` 等，找到对应的 label
     - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
-    - 从 `\includegraphics` 或 `\input` 中提取图表文件路径（如 `figures/fig_motivation1.png`）
+    - 从 `\includegraphics` 或 `\input` 中提取图表文件路径（如 `figures/fig_experiment1.png`）
     - **只读取该文件，不要分析其他无关图表**
-  - 在编辑图表前，先用 `vision` 工具分析该图表，了解需要修改的部分
+  - **对于实验分析图**：
+    - 必须先使用 `vision` 工具分析现有图表，理解其内容和结构
+    - 然后根据分析结果和审稿意见，修改生成该图表的代码脚本
+    - 执行修改后的脚本生成新图表
+    - 最后在 LaTeX 中更新图表引用
+  - **对于 motivation 和 algorithm 图**：
+    - **标准流程**：
+      1. 先使用 `vision` 工具分析图像，理解其内容和结构，明确需要修改的部分
+      2. 然后使用 `image_edit` 工具直接编辑图像（添加标注、修改元素、调整颜色、调整布局等）
+      3. 最后在 LaTeX 中更新图片引用（如果文件名改变）
+    - **不要**直接修改生成脚本，应优先使用 `image_edit` 工具
   - 提供清晰的图像路径和具体的分析需求
 - 使用 `image_edit` 工具时：
-  - 用于直接编辑图像文件，适合修改算法图、动机图等
-  - 在编辑前，建议先用 `vision` 工具分析图像，明确需要修改的内容
-  - 根据审稿意见，可以添加标注、修改元素、调整颜色、调整布局等
+  - 用于直接编辑图像文件，**专门用于修改 motivation 和 algorithm 图**
+  - **标准流程**：
+    1. 在编辑前，必须先使用 `vision` 工具分析图像，明确需要修改的内容
+    2. 根据审稿意见和 vision 工具的分析结果，使用 `image_edit` 工具编辑图像
+    3. 可以添加标注、修改元素、调整颜色、调整布局等
+    4. 编辑完成后，在 LaTeX 中更新图片引用（如果文件名改变）
   - 确保编辑后的图像符合审稿要求
+  - **注意**：对于实验分析图，应优先使用修改代码脚本的方式，而不是直接编辑图像
   - 注意：`image_edit` 工具需要 `image_client` 参数，如果未提供则不可用
 - 使用 `run_python_file` 时：
   - 确保脚本路径正确
