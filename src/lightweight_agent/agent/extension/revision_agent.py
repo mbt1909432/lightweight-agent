@@ -8,12 +8,16 @@
 - 生成 Cover Letter（逐点回复）
 """
 
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from ..todo_based_agent import TodoBasedAgent
 from ...clients.base import BaseClient
-from ...tools.builtin import BatchEditTool, MdToPdfTool
+from ...tools.builtin import BatchEditTool, MdToPdfTool, ImageEditTool
+from ...tools.extensions.vision import VisionTool
 from ...session.session import Session
+
+if TYPE_CHECKING:
+    from ...clients.banana_image_client import BananaImageClient
 
 
 def build_revision_agent_system_prompt(
@@ -46,6 +50,11 @@ def build_revision_agent_system_prompt(
 - 根据意见修改论文（文字、图表、算法图）
 - 使用颜色标注每位审稿人对应的修改
 - 生成详细的 Cover Letter，逐点回应所有审稿意见
+
+**图表处理能力：**
+- 如果图表文件已存在，优先使用 `vision` 工具分析图表，然后使用 `image_edit` 工具直接编辑
+- 如果图表由脚本生成，可以修改脚本并重新生成
+- 根据审稿意见灵活选择最适合的修改方式
 
 **重要说明：**
 - 所有修改必须基于审稿意见，不能随意添加或删除内容
@@ -130,18 +139,37 @@ def build_revision_agent_system_prompt(
   - 优先使用方式 1，如果空间不足或需要更清晰的标注，使用方式 2
 - **实验图表修订**：
   - 如果审稿意见涉及图表修改：
-    - 定位 `scripts/` 目录中的相关图表生成脚本
-    - 使用 `read_file` 读取脚本，理解其结构
-    - 使用 `BatchEdit` 修改脚本（参数、样式、数据源等）
-    - 使用 `run_python_file` 运行修改后的脚本生成新图表
-    - 在 LaTeX 中更新图表引用（如果文件名改变）
-  - 如果图表文件已存在但需要替换，确保新图表文件名正确
+    - **优先方案**：如果图表文件已存在（例如在 `figures/` 目录），可以：
+      1. **从 .tex 文件中定位图表文件**：
+         - 根据审稿意见中提到的图表编号（如 Figure 1, Table 2 等），在 .tex 文件中搜索对应的 `\label{fig:...}` 或 `\label{tab:...}`
+         - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
+         - 从 `\includegraphics` 或 `\input` 中提取图表文件路径（如 `figures/fig_motivation1.png`）
+         - **只读取该文件，不要读取其他无关图表**
+      2. 使用 `vision` 工具分析该图表，理解其内容和结构（**仅分析审稿人提到的图表，不要分析其他无关图表**）
+      3. 根据审稿意见，使用 `image_edit` 工具直接编辑图表（调整颜色、标注、布局等）
+      4. 保存编辑后的图表，在 LaTeX 中更新引用（如果文件名改变）
+    - **备选方案**：如果图表由脚本生成：
+      1. 定位 `scripts/` 目录中的相关图表生成脚本
+      2. 使用 `read_file` 读取脚本，理解其结构
+      3. 使用 `BatchEdit` 修改脚本（参数、样式、数据源等）
+      4. 使用 `run_python_file` 运行修改后的脚本生成新图表
+      5. 在 LaTeX 中更新图表引用（如果文件名改变）
+    - 如果图表文件已存在但需要替换，确保新图表文件名正确
 - **算法/动机图修订**：
   - 如果审稿意见涉及算法图或动机图：
-    - 识别需要修改的图片（在 `figures/algorithm/` 或 `figures/motivation/` 目录）
-    - 如果存在对应的生成脚本，修改脚本并重新生成
-    - 如果不存在脚本，可能需要使用其他工具或手动说明
-    - 在 LaTeX 中更新图片引用
+    - **优先方案**：如果图片文件已存在（在 `figures/algorithm/` 或 `figures/motivation/` 目录）：
+      1. **从 .tex 文件中定位图片文件**：
+         - 根据审稿意见中提到的图片编号（如 Algorithm 1, Figure X 等），在 .tex 文件中搜索对应的 `\label{alg:...}` 或 `\label{fig:...}`
+         - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
+         - 从 `\includegraphics` 或 `\input` 中提取图片文件路径（如 `figures/fig_motivation1.png`）
+         - **只读取该文件，不要读取其他无关图片**
+      2. 使用 `vision` 工具分析该图片，理解其内容和结构（**仅分析审稿人提到的图片，不要分析其他无关图片**）
+      3. 根据审稿意见，使用 `image_edit` 工具直接编辑图片（添加标注、修改元素、调整布局等）
+      4. 保存编辑后的图片，在 LaTeX 中更新引用
+    - **备选方案**：如果存在对应的生成脚本：
+      1. 修改脚本并重新生成
+      2. 在 LaTeX 中更新图片引用
+    - 如果不存在脚本且无法直接编辑，记录说明并建议手动处理
 - **记录修改位置**：
   - 为每条修改记录：
     - 审稿人编号
@@ -203,6 +231,7 @@ def build_revision_agent_system_prompt(
 - 使用 `save_important_artifacts` 保存：
   - 修订后的论文主文件（.tex）
   - 修改后的图表生成脚本（如有，在 `scripts/` 目录）
+  - 编辑后的图表文件（如有，使用 `image_edit` 工具修改的图片）
   - Cover Letter（cover_letter.md 和 cover_letter.pdf，如果已转换）
 - 确保所有文件都已正确保存
 - 完成后将相应的 TODO 项标记为已完成"""
@@ -355,6 +384,8 @@ We thank all reviewers for their valuable comments...
 - `Write`：创建 Cover Letter 文件（Markdown 格式）
 - `md_to_pdf`：将 Markdown 文件转换为 PDF（用于将 cover_letter.md 转换为 cover_letter.pdf）
 - `run_python_file`：运行修改后的图表生成脚本
+- `vision`：分析图像内容，理解图表结构和元素（如果 vision_client 可用）
+- `image_edit`：直接编辑图像文件，修改图表内容（如果 image_client 可用）
 - `save_important_artifacts`：保存修订后的文件
 
 ### 使用原则
@@ -371,6 +402,22 @@ We thank all reviewers for their valuable comments...
 - 使用 `md_to_pdf` 时：
   - 确保输入的 Markdown 文件路径正确
   - 转换后检查 PDF 文件是否成功生成
+- 使用 `vision` 工具时：
+  - 用于分析现有图表，理解其内容和结构
+  - **重要：只读取审稿人要求的图**：
+    - 根据审稿意见中提到的图表编号（如 Figure 1, Table 2, Algorithm 1 等），先在 .tex 文件中定位对应的图表引用
+    - 在 .tex 文件中搜索 `\label{fig:...}`, `\label{tab:...}`, `\label{alg:...}` 等，找到对应的 label
+    - 找到该 label 附近的 `\includegraphics{figures/...}` 或 `\input{figures/...}` 语句
+    - 从 `\includegraphics` 或 `\input` 中提取图表文件路径（如 `figures/fig_motivation1.png`）
+    - **只读取该文件，不要分析其他无关图表**
+  - 在编辑图表前，先用 `vision` 工具分析该图表，了解需要修改的部分
+  - 提供清晰的图像路径和具体的分析需求
+- 使用 `image_edit` 工具时：
+  - 用于直接编辑图像文件，适合修改算法图、动机图等
+  - 在编辑前，建议先用 `vision` 工具分析图像，明确需要修改的内容
+  - 根据审稿意见，可以添加标注、修改元素、调整颜色、调整布局等
+  - 确保编辑后的图像符合审稿要求
+  - 注意：`image_edit` 工具需要 `image_client` 参数，如果未提供则不可用
 - 使用 `run_python_file` 时：
   - 确保脚本路径正确
   - 确保脚本所需的依赖和输入文件都存在
@@ -422,6 +469,8 @@ class RevisionAgent(TodoBasedAgent):
         blocked_paths: Optional[List[str]] = None,
         session_id: Optional[str] = None,
         system_prompt: Optional[str] = None,
+        vision_client: Optional[BaseClient] = None,
+        image_client: Optional["BananaImageClient"] = None,
     ):
         """
         Initialize Revision Agent
@@ -431,6 +480,17 @@ class RevisionAgent(TodoBasedAgent):
         - 保留 RunPythonFileTool（用于修改和运行图表生成脚本）
         - 使用 BatchEditTool 替换 EditTool
         - 注册 MdToPdfTool（用于将 Cover Letter Markdown 转换为 PDF）
+        - 注册 VisionTool（用于分析图表，需要 vision_client）
+        - 注册 ImageEditTool（用于直接编辑图表，需要 image_client）
+        
+        :param client: LLM client instance
+        :param working_dir: Default working directory (optional)
+        :param allowed_paths: List of allowed paths
+        :param blocked_paths: List of blocked paths
+        :param session_id: Session ID (optional, auto-generated UUID if not provided)
+        :param system_prompt: Custom system prompt (optional)
+        :param vision_client: Optional separate client for vision tools (if not provided, vision tools will not be available)
+        :param image_client: Optional BananaImageClient for image editing (if not provided, image editing is not available)
         """
         super().__init__(
             client=client,
@@ -439,6 +499,8 @@ class RevisionAgent(TodoBasedAgent):
             blocked_paths=blocked_paths,
             session_id=session_id,
             system_prompt=None,  # 先用默认工具初始化，稍后再设置专用 system prompt
+            vision_client=vision_client,
+            image_client=image_client,
         )
 
         # 保留 WriteTool（用于生成 Cover Letter）
@@ -454,6 +516,9 @@ class RevisionAgent(TodoBasedAgent):
         # 注册 MdToPdfTool（用于将 Cover Letter Markdown 转换为 PDF）
         self.register_tool(MdToPdfTool(self.session))
 
+        # 注册 VisionTool 和 ImageEditTool（用于分析和编辑图表）
+        self._register_image_tools()
+
         # 构建专用 system prompt
         if system_prompt is None:
             self.system_prompt = build_revision_agent_system_prompt(
@@ -462,4 +527,28 @@ class RevisionAgent(TodoBasedAgent):
             )
         else:
             self.system_prompt = system_prompt
+
+    def _register_image_tools(self) -> None:
+        """
+        Register VisionTool and ImageEditTool for analyzing and editing figures.
+        
+        Note: This method registers VisionTool and ImageEditTool in addition to the tools
+        already registered by TodoBasedAgent (default tools + TODO tools).
+        VisionTool is registered if vision_client is available, while ImageEditTool
+        is only registered if image_client is provided.
+        """
+        # Register VisionTool for analyzing images before editing
+        # Only register if vision_client is explicitly provided (no fallback to client)
+        if self.session.vision_client is not None:
+            vision_tool = VisionTool(self.session)
+            self._tool_registry.register(vision_tool)
+
+        # Register ImageEditTool for editing images
+        if self.session.image_client:
+            image_edit_tool = ImageEditTool(self.session)
+            self._tool_registry.register(image_edit_tool)
+        else:
+            # If image_client is not provided, ImageEditTool won't be registered
+            # This is acceptable - the agent will work but without image editing capability
+            pass
 
