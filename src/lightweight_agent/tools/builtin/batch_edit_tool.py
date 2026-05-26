@@ -1,7 +1,64 @@
 """Batch Edit Tool - Batch Edit File"""
+import difflib
 import json
 from typing import Dict, Any, List
 from ..base import Tool
+
+
+def _line_col_for_index(content: str, index: int) -> Dict[str, int]:
+    """Return 1-based line/column for a character index."""
+    prefix = content[:index]
+    line = prefix.count("\n") + 1
+    last_newline = prefix.rfind("\n")
+    column = index + 1 if last_newline == -1 else index - last_newline
+    return {"line": line, "column": column}
+
+
+def _compact_preview(text: str, limit: int = 800) -> str:
+    if len(text) <= limit:
+        return text
+    half = max(1, limit // 2)
+    return text[:half] + "\n...<truncated>...\n" + text[-half:]
+
+
+def _nearest_match_diagnostic(content: str, old_string: str) -> Dict[str, Any]:
+    """
+    Build diagnostics for an unmatched exact edit without performing fuzzy replacement.
+
+    The returned nearest_match is only a hint for the model/user to re-read and copy
+    exact text. BatchEdit still requires exact old_string matching.
+    """
+    diagnostic: Dict[str, Any] = {
+        "hint": (
+            "Exact old_string was not found. Do not retry from memory. "
+            "Read a smaller nearby range and copy old_string exactly from the latest Read output."
+        )
+    }
+
+    if not content or not old_string:
+        return diagnostic
+
+    matcher = difflib.SequenceMatcher(None, content, old_string, autojunk=False)
+    match = matcher.find_longest_match(0, len(content), 0, len(old_string))
+    if match.size <= 0:
+        return diagnostic
+
+    context_radius = max(120, min(500, len(old_string)))
+    start = max(0, match.a - context_radius)
+    end = min(len(content), match.a + match.size + context_radius)
+    matched_context = content[start:end]
+    expected_context = old_string[max(0, match.b - context_radius):min(len(old_string), match.b + match.size + context_radius)]
+    location = _line_col_for_index(content, match.a)
+
+    diagnostic.update({
+        "nearest_match_line": location["line"],
+        "nearest_match_column": location["column"],
+        "longest_common_substring_length": match.size,
+        "old_string_length": len(old_string),
+        "nearest_match_context": _compact_preview(matched_context),
+        "old_string_context": _compact_preview(expected_context),
+    })
+    return diagnostic
 
 
 class BatchEditTool(Tool):
@@ -115,10 +172,12 @@ class BatchEditTool(Tool):
                 try:
                     # Check if old_string exists
                     if old_string not in content:
+                        diagnostic = _nearest_match_diagnostic(content, old_string)
                         results.append({
                             "id": edit_id,
                             "status": "failed",
-                            "error": "The specified text was not found in the file"
+                            "error": "The specified text was not found in the file",
+                            "diagnostic": diagnostic
                         })
                         fail_count += 1
                         continue
