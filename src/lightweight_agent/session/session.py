@@ -131,7 +131,8 @@ class Session:
         role: str,
         content: str,
         tool_calls: Optional[List[Dict[str, Any]]] = None,
-        tool_call_id: Optional[str] = None
+        tool_call_id: Optional[str] = None,
+        reasoning_content: Optional[str] = None
     ) -> None:
         """
         Add message to history
@@ -140,8 +141,9 @@ class Session:
         :param content: Message content
         :param tool_calls: Tool calls (only for assistant messages)
         :param tool_call_id: Tool call ID (only for tool messages)
+        :param reasoning_content: Reasoning trace returned by compatible OpenAI-style models
         """
-        self.history.add(role, content, tool_calls, tool_call_id)
+        self.history.add(role, content, tool_calls, tool_call_id, reasoning_content)
     
     def get_messages(self) -> List[Dict[str, Any]]:
         """
@@ -164,4 +166,3 @@ class Session:
     def clear_history(self) -> None:
         """Clear conversation history (keep system messages)"""
         self.history.clear(keep_system=True)
-

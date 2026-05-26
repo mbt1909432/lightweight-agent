@@ -263,11 +263,13 @@ class ReActAgent:
                         })
                     
                     assistant_content = message.content if message.content else ""
+                    reasoning_content = getattr(message, "reasoning_content", None)
                     try:
                         self.session.add_message(
                             role="assistant",
                             content=assistant_content,
-                            tool_calls=tool_calls_dict
+                            tool_calls=tool_calls_dict,
+                            reasoning_content=reasoning_content
                         )
                     except Exception as e:
                         stop_flag = True
@@ -374,10 +376,12 @@ class ReActAgent:
                     continue
                 else:
                     assistant_content = message.content if message.content else ""
+                    reasoning_content = getattr(message, "reasoning_content", None)
                     try:
                         self.session.add_message(
                             role="assistant",
-                            content=assistant_content
+                            content=assistant_content,
+                            reasoning_content=reasoning_content
                         )
                     except Exception as e:
                         stop_flag = True

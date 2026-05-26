@@ -11,6 +11,7 @@ class Message:
     content: str
     tool_calls: Optional[List[Dict[str, Any]]] = None
     tool_call_id: Optional[str] = None
+    reasoning_content: Optional[str] = None
     timestamp: datetime = field(default_factory=datetime.now)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -38,6 +39,8 @@ class Message:
         
         if self.tool_calls:
             result["tool_calls"] = self.tool_calls
+        if self.role == "assistant" and self.reasoning_content:
+            result["reasoning_content"] = self.reasoning_content
         if self.tool_call_id:
             result["tool_call_id"] = self.tool_call_id
         return result
@@ -66,7 +69,8 @@ class MessageHistory:
         role: str,
         content: str,
         tool_calls: Optional[List[Dict[str, Any]]] = None,
-        tool_call_id: Optional[str] = None
+        tool_call_id: Optional[str] = None,
+        reasoning_content: Optional[str] = None
     ) -> None:
         """
         Add message
@@ -75,12 +79,14 @@ class MessageHistory:
         :param content: Message content
         :param tool_calls: Tool calls (only for assistant messages)
         :param tool_call_id: Tool call ID (only for tool messages)
+        :param reasoning_content: Reasoning trace returned by compatible OpenAI-style models
         """
         message = Message(
             role=role,
             content=content,
             tool_calls=tool_calls,
-            tool_call_id=tool_call_id
+            tool_call_id=tool_call_id,
+            reasoning_content=reasoning_content
         )
         self.messages.append(message)
         
