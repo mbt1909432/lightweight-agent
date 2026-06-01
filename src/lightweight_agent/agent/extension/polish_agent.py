@@ -85,23 +85,24 @@ def build_polish_agent_system_prompt(
   - 引用问题（确保所有 `\\cite`、`\\ref`、`\\label` 都有对应的定义）。
   - **⚠️ 表格溢出问题（必须严格检查）**：检查所有表格是否超出页面宽度，这是 LaTeX 编译的常见问题，必须彻底解决。
     - **决策流程（按优先级执行）**：
-      1. **表格稍微超出** → 使用 `adjustbox{max width=\\textwidth}` 自动缩放（首选方案）。
-      2. **仍然太宽** → 添加 `\\small` + `\\setlength{\\tabcolsep}{5pt}` 缩小字体和列间距。
-      3. **还是太宽** → 缩写列名或分行显示表头，或使用 `\\rotatebox{90}{...}` 旋转表头。
-      4. **极宽表格** → 使用 `landscape` 或 `sidewaystable` 旋转整个表格。
-      5. **列数太多** → 考虑拆分成多个表格或转置表格（行列互换）。
+      1. **宽表/双栏论文中超过单栏宽度的表格** → 优先改为 `table*`，并使用 `\\resizebox{\\textwidth}{!}{...}` 或 `\\adjustbox{max width=\\textwidth}{...}` 包住 `tabular`，确保不越界。
+      2. **表格稍微超出** → 使用 `adjustbox{max width=\\textwidth}` 自动缩放（首选方案）。
+      3. **仍然太宽** → 添加 `\\small` + `\\setlength{\\tabcolsep}{5pt}` 缩小字体和列间距。
+      4. **还是太宽** → 缩写列名或分行显示表头，或使用 `\\rotatebox{90}{...}` 旋转表头。
+      5. **极宽表格** → 使用 `landscape` 或 `sidewaystable` 旋转整个表格。
+      6. **列数太多** → 考虑拆分成多个表格或转置表格（行列互换）。
     - **具体处理方法**：
       - **方法1：自动缩放（最推荐）**：
         ```latex
         \\usepackage{adjustbox}
-        \\begin{table}[htbp]
+        \\begin{table*}[t!]
         \\centering
         \\adjustbox{max width=\\textwidth}{
         \\begin{tabular}{...}
           ...
         \\end{tabular}
         }
-        \\end{table}
+        \\end{table*}
         ```
         或者使用 `resizebox`：
         ```latex
@@ -133,6 +134,7 @@ def build_polish_agent_system_prompt(
       - **方法8：特殊场景**：超宽表格使用 `tabularx` 自动调整列宽，数值对齐使用 `siunitx` 包。
     - **必需包检查**：确保导言区包含 `\\usepackage{adjustbox}`、`\\usepackage{graphicx}`、`\\usepackage{rotating}`（可选）、`\\usepackage{pdflscape}`（可选）、`\\usepackage{booktabs}`、`\\usepackage{array}`、`\\usepackage{tabularx}`（可选）、`\\usepackage{siunitx}`（可选）。
     - **⚠️ 重要提醒**：
+      - 窄表不要强行改成 `table*`；只有明显宽表或双栏页面中单栏放不下的表格才使用 `table*`。
       - 不要过度缩小字体（避免小于 `\\footnotesize`），保持可读性。
       - 同一文档中的类似表格使用相同方法，保持一致性。
       - 确保 `caption` 和 `label` 位置正确（`label` 始终放在 `caption` 之后）。
