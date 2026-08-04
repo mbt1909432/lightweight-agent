@@ -1,5 +1,6 @@
 """Anthropic Client Implementation"""
-from typing import AsyncIterator, Optional, Union, List, Dict, Any
+from types import SimpleNamespace
+from typing import AsyncIterator, Optional, Union, List, Dict, Any, Tuple
 from pathlib import Path
 import json
 from anthropic import AsyncAnthropic
@@ -39,6 +40,168 @@ class AnthropicClient(BaseClient):
                          }
 
         self.client = AsyncAnthropic(**client_kwargs)
+
+    @staticmethod
+    def _convert_tools(tools: Optional[List[Dict[str, Any]]]) -> Optional[List[Dict[str, Any]]]:
+        """Convert OpenAI function tools to Anthropic tool definitions."""
+        if tools is None:
+            return None
+
+        converted = []
+        for tool in tools:
+            function = tool.get("function", tool)
+            converted.append({
+                "name": function["name"],
+                "description": function.get("description", ""),
+                "input_schema": function.get("parameters", {"type": "object", "properties": {}}),
+            })
+        return converted
+
+    @staticmethod
+    def _convert_tool_choice(
+        tool_choice: Optional[Union[str, Dict[str, Any]]]
+    ) -> Optional[Dict[str, Any]]:
+        """Convert OpenAI tool_choice to Anthropic's format."""
+        if tool_choice is None:
+            return None
+        if isinstance(tool_choice, str):
+            if tool_choice == "none":
+                return None
+            if tool_choice in {"auto", "any"}:
+                return {"type": tool_choice}
+            return {"type": "tool", "name": tool_choice}
+
+        choice_type = tool_choice.get("type")
+        if choice_type == "function":
+            function = tool_choice.get("function") or {}
+            return {"type": "tool", "name": function.get("name")}
+        return tool_choice
+
+    @staticmethod
+    def _convert_messages(messages: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
+        """Convert an OpenAI-style ReAct history to Anthropic messages."""
+        system_parts: List[str] = []
+        converted: List[Dict[str, Any]] = []
+
+        for message in messages:
+            role = message.get("role")
+            content = message.get("content") or ""
+
+            if role == "system":
+                if content:
+                    system_parts.append(str(content))
+                continue
+
+            if role == "assistant":
+                blocks: List[Dict[str, Any]] = []
+                if content:
+                    blocks.append({"type": "text", "text": str(content)})
+                for tool_call in message.get("tool_calls") or []:
+                    function = tool_call.get("function") or {}
+                    arguments = function.get("arguments") or "{}"
+                    if isinstance(arguments, str):
+                        try:
+                            arguments = json.loads(arguments)
+                        except json.JSONDecodeError:
+                            arguments = {"raw_arguments": arguments}
+                    blocks.append({
+                        "type": "tool_use",
+                        "id": tool_call["id"],
+                        "name": function["name"],
+                        "input": arguments,
+                    })
+                if blocks:
+                    converted.append({"role": "assistant", "content": blocks})
+                continue
+
+            if role == "tool":
+                converted.append({
+                    "role": "user",
+                    "content": [{
+                        "type": "tool_result",
+                        "tool_use_id": message["tool_call_id"],
+                        "content": str(content),
+                    }],
+                })
+                continue
+
+            converted.append({"role": "user", "content": content})
+
+        return "\n\n".join(system_parts), converted
+
+    @staticmethod
+    def _normalize_tool_response(response: Any) -> Any:
+        """Return an OpenAI-shaped response consumed by the existing ReAct loop."""
+        text_parts: List[str] = []
+        tool_calls = []
+        for block in response.content or []:
+            block_type = getattr(block, "type", None)
+            if block_type == "text" and getattr(block, "text", None):
+                text_parts.append(block.text)
+            elif block_type == "tool_use":
+                tool_calls.append(SimpleNamespace(
+                    id=block.id,
+                    type="function",
+                    function=SimpleNamespace(
+                        name=block.name,
+                        arguments=json.dumps(block.input or {}, ensure_ascii=False),
+                    ),
+                ))
+
+        input_tokens = getattr(response.usage, "input_tokens", 0) or 0
+        output_tokens = getattr(response.usage, "output_tokens", 0) or 0
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(
+                content="".join(text_parts),
+                tool_calls=tool_calls or None,
+                reasoning_content=None,
+            ))],
+            usage=SimpleNamespace(
+                prompt_tokens=input_tokens,
+                completion_tokens=output_tokens,
+                total_tokens=input_tokens + output_tokens,
+            ),
+            model=getattr(response, "model", None),
+            stop_reason=getattr(response, "stop_reason", None),
+            raw_response=response,
+        )
+
+    async def generate_with_tools(
+        self,
+        messages: List[Dict[str, Any]],
+        tools: Optional[List[Dict[str, Any]]] = None,
+        tool_choice: Optional[Union[str, Dict[str, Any]]] = "auto",
+        temperature: float = 0.6,
+        max_tokens: int = 8192,
+        **kwargs: Any,
+    ) -> Any:
+        """Call Anthropic Messages with native tool_use/tool_result semantics."""
+        system, anthropic_messages = self._convert_messages(messages)
+        request_params: Dict[str, Any] = {
+            "model": self.model,
+            "messages": anthropic_messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            **kwargs,
+        }
+        if system:
+            request_params["system"] = system
+        converted_tools = self._convert_tools(tools)
+        if converted_tools:
+            request_params["tools"] = converted_tools
+            converted_choice = self._convert_tool_choice(tool_choice)
+            if converted_choice:
+                request_params["tool_choice"] = converted_choice
+
+        try:
+            response = await self.client.messages.create(**request_params)
+            return self._normalize_tool_response(response)
+        except APIConnectionError as e:
+            raise NetworkError(f"Network error when calling Anthropic API: {str(e)}") from e
+        except AnthropicAPIError as e:
+            raise APIError(f"Anthropic API error: {str(e)}") from e
+        except Exception as e:
+            raise APIError(f"Unexpected error: {str(e)}") from e
     
     def add_image_to_messages(
         self,
@@ -93,8 +256,12 @@ class AnthropicClient(BaseClient):
                 return await self._handle_streaming_response(response)
             else:
                 response = await self.client.messages.create(**request_params)
+                content = ""
                 if response.content and len(response.content) > 0:
-                    content = response.content[0].text
+                    for block in response.content:
+                        block_text = getattr(block, "text", None)
+                        if block_text:
+                            content += block_text
                 
                 usage = None
                 if hasattr(response, 'usage') and response.usage:

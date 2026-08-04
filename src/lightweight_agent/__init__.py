@@ -25,7 +25,7 @@ try:
 except Exception:  # pragma: no cover
     AnthropicClient = None  # type: ignore
 
-__version__ = "0.1.7"
+__version__ = "0.1.12"
 __all__ = [
     "OpenAIClient",
     "AnthropicClient",
@@ -50,4 +50,3 @@ __all__ = [
     "create_openai_image_message",
     "create_anthropic_image_message",
 ]
-

@@ -193,7 +193,12 @@ class ReActAgent:
             # Get tool schemas
             tool_schemas = self._tool_registry.get_schemas()
 
-            if isinstance(self.client, OpenAIClient):
+            supported_clients = (
+                (OpenAIClient,)
+                if AnthropicClient is None
+                else (OpenAIClient, AnthropicClient)
+            )
+            if isinstance(self.client, supported_clients):
                 # Get message list (OpenAI format)
                 messages = self.session.get_messages()
                 try:
