@@ -83,6 +83,13 @@ class AnthropicClient(BaseClient):
         system_parts: List[str] = []
         converted: List[Dict[str, Any]] = []
 
+        pending_tool_results: List[Dict[str, Any]] = []
+
+        def flush_tool_results() -> None:
+            if pending_tool_results:
+                converted.append({"role": "user", "content": list(pending_tool_results)})
+                pending_tool_results.clear()
+
         for message in messages:
             role = message.get("role")
             content = message.get("content") or ""
@@ -93,6 +100,7 @@ class AnthropicClient(BaseClient):
                 continue
 
             if role == "assistant":
+                flush_tool_results()
                 blocks: List[Dict[str, Any]] = []
                 if content:
                     blocks.append({"type": "text", "text": str(content)})
@@ -115,18 +123,17 @@ class AnthropicClient(BaseClient):
                 continue
 
             if role == "tool":
-                converted.append({
-                    "role": "user",
-                    "content": [{
-                        "type": "tool_result",
-                        "tool_use_id": message["tool_call_id"],
-                        "content": str(content),
-                    }],
+                pending_tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": message["tool_call_id"],
+                    "content": str(content),
                 })
                 continue
 
+            flush_tool_results()
             converted.append({"role": "user", "content": content})
 
+        flush_tool_results()
         return "\n\n".join(system_parts), converted
 
     @staticmethod
@@ -171,7 +178,7 @@ class AnthropicClient(BaseClient):
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Optional[Union[str, Dict[str, Any]]] = "auto",
-        temperature: float = 0.6,
+        temperature: Optional[float] = 0.6,
         max_tokens: int = 8192,
         **kwargs: Any,
     ) -> Any:
@@ -181,9 +188,10 @@ class AnthropicClient(BaseClient):
             "model": self.model,
             "messages": anthropic_messages,
             "max_tokens": max_tokens,
-            "temperature": temperature,
             **kwargs,
         }
+        if temperature is not None:
+            request_params["temperature"] = temperature
         if system:
             request_params["system"] = system
         converted_tools = self._convert_tools(tools)

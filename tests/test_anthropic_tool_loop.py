@@ -43,6 +43,60 @@ def test_converts_openai_react_history_to_anthropic_messages():
     assert messages[2]["content"][0]["tool_use_id"] == "tool-1"
 
 
+def test_groups_parallel_tool_results_in_one_anthropic_user_message():
+    _, messages = AnthropicClient._convert_messages([
+        {"role": "user", "content": "read both files"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "id": "tool-1",
+                    "type": "function",
+                    "function": {"name": "Read", "arguments": '{"file_path":"a.txt"}'},
+                },
+                {
+                    "id": "tool-2",
+                    "type": "function",
+                    "function": {"name": "Read", "arguments": '{"file_path":"b.txt"}'},
+                },
+            ],
+        },
+        {"role": "tool", "tool_call_id": "tool-1", "content": "a"},
+        {"role": "tool", "tool_call_id": "tool-2", "content": "b"},
+    ])
+
+    assert len(messages) == 3
+    assert messages[2]["role"] == "user"
+    assert [block["tool_use_id"] for block in messages[2]["content"]] == [
+        "tool-1",
+        "tool-2",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_omits_temperature_when_none():
+    client = AnthropicClient(
+        api_key="test-key",
+        base_url="https://example.invalid",
+        model="claude-sonnet-5",
+    )
+    calls = []
+
+    async def create(**kwargs):
+        calls.append(kwargs)
+        return _response(SimpleNamespace(type="text", text="done"))
+
+    client.client = SimpleNamespace(messages=SimpleNamespace(create=create))
+    await client.generate_with_tools(
+        messages=[{"role": "user", "content": "hello"}],
+        tools=[],
+        temperature=None,
+    )
+
+    assert "temperature" not in calls[0]
+
+
 @pytest.mark.asyncio
 async def test_react_agent_executes_native_anthropic_tool_loop(tmp_path):
     target = tmp_path / "paper.tex"
